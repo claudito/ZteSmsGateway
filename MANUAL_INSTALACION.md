@@ -33,8 +33,8 @@ excepcion: usan comandos de red que solo existen en PowerShell.
    instalar "Git for Windows" (dejar las opciones por defecto esta bien).
    Esto instala la terminal **Git Bash** que se usa en el resto de esta
    guia (y trae `curl` incluido).
-3. **VS Code** (opcional, pero recomendado para editar `.env` /
-   `routers.json` mas comodo que con el Bloc de notas): ir a
+3. **VS Code** (opcional, pero recomendado para editar `.env` mas comodo
+   que con el Bloc de notas): ir a
    https://code.visualstudio.com/download, descargar e instalar "VS Code"
    para Windows (dejar las opciones por defecto esta bien).
 4. Al terminar, busca "Git Bash" en el menu Inicio, abrelo, y verifica:
@@ -167,46 +167,26 @@ administrador del paso anterior):
 netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow protocol=TCP localport=8000
 ```
 
-## Paso 8 - Configurar `.env` y `routers.json`
+## Paso 8 - Configurar `.env`
 
 De vuelta en Git Bash, en la carpeta del proyecto (`C:\SMSGateway`), copia
-las dos plantillas:
+la plantilla:
 
 ```bash
 cp .env.example .env
-cp routers.json.example routers.json
 ```
 
-Abre `.env` con el Bloc de notas y completa:
+Abre `.env` con el Bloc de notas (o VS Code) y completa:
 
 ```
 SMS_API_KEY=CAMBIA-ESTO-POR-UNA-CLAVE-SECRETA
-ZTE_ROUTER_PASSWORD=admin
 ```
 
-> `SMS_API_KEY` es la clave que va a tener que mandar cualquiera que use la
-> API — es lo unico que evita que cualquiera en la red envie SMS con tus
-> routers. `ZTE_ROUTER_PASSWORD` es la password web que usan tus routers
-> (la de la etiqueta, `admin` si no la cambiaste).
-
-Abre `routers.json` y pon un id + la IP de cada router que configuraste en
-el Paso 4 (o `192.168.0.1` si es uno solo):
-
-```json
-[
-  {"id": "router1", "ip": "192.168.1.1"},
-  {"id": "router2", "ip": "192.168.2.1"}
-]
-```
-
-> Si alguno de tus routers tiene una password web distinta a la de
-> `ZTE_ROUTER_PASSWORD`, agrega en `.env` una linea
-> `ZTE_PASSWORD_<ID EN MAYUSCULAS>=esa-password` (por ejemplo
-> `ZTE_PASSWORD_ROUTER2=otra-clave` para el router con id `router2`).
-
-Para agregar un router mas adelante, solo hay que sumar una linea a
-`routers.json` (y, si hace falta, una variable a `.env`) — no hay que crear
-nada mas ni reinstalar nada.
+> Es la clave que va a tener que mandar cualquiera que use la API o el
+> dashboard — es lo unico que evita que cualquiera en la red vea el
+> historial de SMS o envie mensajes con tus routers. Los routers en si
+> (ip, password, numero) **no se configuran aca**: se agregan desde el
+> dashboard web en el siguiente paso.
 
 ## Paso 9 - Arrancar la API
 
@@ -219,15 +199,17 @@ python -m uvicorn api:app --host 0.0.0.0 --port 8000
 Debe quedar la ventana abierta mostrando `Uvicorn running on
 http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
 
-## Paso 10 - Probar
+## Paso 10 - Agregar tus routers desde el dashboard y probar
 
-1. Abre otra ventana de Git Bash y confirma que la API reconocio tus
-   routers:
-   ```bash
-   curl http://localhost:8000/routers
-   ```
-   Debe listar los ids e IPs que pusiste en `routers.json`.
-2. Envia un SMS de prueba (cambia `router1` por el id que quieras usar):
+1. Abre un navegador en esta misma PC y entra a `http://localhost:8000/`.
+2. Pega tu `SMS_API_KEY` (la que pusiste en `.env`) arriba a la derecha y
+   dale a "Guardar".
+3. En la seccion "Routers", llena el formulario de abajo por cada router
+   (id, ip — la que le asignaste en el Paso 4 —, password, y opcionalmente
+   el numero de la linea) y dale a "Agregar / actualizar". Deberian
+   aparecer en la tabla de arriba.
+4. Envia un SMS de prueba desde otra terminal Git Bash (cambia `router1`
+   por el id que hayas usado):
    ```bash
    curl -X POST http://<ip_de_esta_pc>:8000/routers/router1/sms/send \
      -H "Content-Type: application/json" \
@@ -235,7 +217,9 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
      -d '{"phone": "+51987654321", "message": "Prueba"}'
    ```
    Respuesta esperada: `{"status":"sent","router":"router1","phone":"+51987654321"}`.
-3. Repite cambiando `router1` por cada id que hayas configurado.
+5. Recarga el dashboard: deberias ver el mensaje en "Resumen" y en la
+   tabla de "Mensajes". Repite el paso 4 cambiando `router1` por cada id
+   que hayas configurado.
 
 ## Paso 11 - Si algo falla: diagnostico
 

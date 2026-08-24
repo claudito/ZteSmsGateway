@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SMS Gateway - Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6;
+    --status-good:    #0ca30c;
+    --status-critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --status-good:    #0ca30c;
+      --status-critical:#e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --status-good:    #0ca30c;
+    --status-critical:#e66767;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--text-secondary); }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+  .apikey-box { display: flex; gap: 6px; align-items: center; }
+  .apikey-box input {
+    background: var(--surface-1); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 8px; font-size: 13px; width: 200px;
+  }
+  button {
+    background: var(--series-1); color: white; border: none;
+    border-radius: 6px; padding: 7px 12px; font-size: 13px;
+    cursor: pointer; font-family: inherit;
+  }
+  button.secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  button.danger { background: var(--status-critical); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .hero { display: flex; gap: 32px; align-items: baseline; margin-bottom: 16px; flex-wrap: wrap; }
+  .hero .num { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hero .label { font-size: 13px; color: var(--text-secondary); }
+
+  .bar-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .bar-row .id { width: 100px; flex-shrink: 0; font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; background: var(--gridline); border-radius: 4px; height: 20px; position: relative; }
+  .bar-fill { background: var(--series-1); height: 100%; border-radius: 4px; min-width: 2px; }
+  .bar-count { width: 130px; flex-shrink: 0; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  .bar-count .failed { color: var(--status-critical); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--gridline); }
+  th { color: var(--text-muted); font-weight: 500; }
+  td.muted { color: var(--text-muted); }
+  td.msg { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+  .badge.sent { color: var(--status-good); background: color-mix(in srgb, var(--status-good) 15%, transparent); }
+  .badge.failed { color: var(--status-critical); background: color-mix(in srgb, var(--status-critical) 15%, transparent); }
+
+  form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  form.inline input, form.inline select {
+    background: var(--surface-1); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 8px; font-size: 13px;
+  }
+  form.inline input[name="id"], form.inline input[name="ip"] { width: 120px; }
+  form.inline input[name="password"] { width: 110px; }
+  form.inline input[name="numero"] { width: 130px; }
+
+  .empty { color: var(--text-muted); font-size: 13px; padding: 8px 0; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter select {
+    background: var(--surface-1); color: var(--text-primary);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 8px; font-size: 13px;
+  }
+  .locked { text-align: center; color: var(--text-muted); padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>SMS Gateway</h1>
+    <div class="apikey-box">
+      <input id="apiKeyInput" type="password" placeholder="X-API-Key" />
+      <button id="saveKeyBtn">Guardar</button>
+    </div>
+  </header>
+
+  <div id="lockedMsg" class="locked" style="display:none">
+    Ingresa tu API key arriba para cargar el dashboard.
+  </div>
+
+  <div id="content" style="display:none">
+    <div class="card">
+      <h2>Resumen</h2>
+      <div class="hero">
+        <div><div class="num" id="totalSent">0</div><div class="label">SMS enviados</div></div>
+        <div><div class="num" id="totalFailed" style="color:var(--status-critical)">0</div><div class="label">fallidos</div></div>
+        <div><div class="num" id="totalRouters">0</div><div class="label">routers</div></div>
+      </div>
+      <div id="barsContainer"></div>
+      <div id="statsEmpty" class="empty" style="display:none">No hay routers configurados todavia.</div>
+    </div>
+
+    <div class="card">
+      <h2>Routers</h2>
+      <table>
+        <thead><tr><th>ID</th><th>IP</th><th>Numero</th><th>Enviados</th><th>Fallidos</th><th></th></tr></thead>
+        <tbody id="routersBody"></tbody>
+      </table>
+      <div id="routersEmpty" class="empty" style="display:none">No hay routers configurados.</div>
+
+      <form class="inline" id="routerForm">
+        <input name="id" placeholder="id (ej. router1)" required />
+        <input name="ip" placeholder="192.168.1.1" required />
+        <input name="password" placeholder="password" required />
+        <input name="numero" placeholder="numero (opcional)" />
+        <button type="submit">Agregar / actualizar</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0">Mensajes</h2>
+        <div class="filter">
+          <select id="routerFilter"><option value="">Todos los routers</option></select>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Router</th><th>Telefono</th><th>Mensaje</th><th>Estado</th></tr></thead>
+        <tbody id="messagesBody"></tbody>
+      </table>
+      <div id="messagesEmpty" class="empty" style="display:none">No hay mensajes enviados todavia.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_STORAGE = "sms_gateway_api_key";
+
+function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ""; }
+function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({}, opts.headers, { "X-API-Key": getApiKey() });
+  const res = await fetch(path, opts);
+  if (res.status === 401) {
+    showLocked();
+    throw new Error("API key invalida");
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || ("HTTP " + res.status));
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+function showLocked() {
+  document.getElementById("lockedMsg").style.display = "block";
+  document.getElementById("content").style.display = "none";
+}
+function showContent() {
+  document.getElementById("lockedMsg").style.display = "none";
+  document.getElementById("content").style.display = "block";
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString();
+}
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else e.setAttribute(k, v);
+  }
+  (children || []).forEach(c => e.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+  return e;
+}
+
+async function loadStats() {
+  const stats = await api("/stats");
+  const totalSent = stats.reduce((a, r) => a + r.sent, 0);
+  const totalFailed = stats.reduce((a, r) => a + r.failed, 0);
+  document.getElementById("totalSent").textContent = totalSent;
+  document.getElementById("totalFailed").textContent = totalFailed;
+  document.getElementById("totalRouters").textContent = stats.length;
+
+  const container = document.getElementById("barsContainer");
+  container.innerHTML = "";
+  document.getElementById("statsEmpty").style.display = stats.length ? "none" : "block";
+
+  const maxTotal = Math.max(1, ...stats.map(r => r.sent + r.failed));
+  stats
+    .slice()
+    .sort((a, b) => (b.sent + b.failed) - (a.sent + a.failed))
+    .forEach(r => {
+      const total = r.sent + r.failed;
+      const pct = Math.max(2, Math.round((total / maxTotal) * 100));
+      const countLabel = el("div", { class: "bar-count" }, [
+        total + (total === 1 ? " sms" : " sms"),
+        r.failed > 0 ? el("span", { class: "failed" }, [" (" + r.failed + " fallidos)"]) : ""
+      ]);
+      const row = el("div", { class: "bar-row" }, [
+        el("div", { class: "id" }, [r.router_id]),
+        el("div", { class: "bar-track" }, [el("div", { class: "bar-fill", style: "width:" + pct + "%" })]),
+        countLabel
+      ]);
+      container.appendChild(row);
+    });
+}
+
+async function loadRouters() {
+  const routers = await api("/routers");
+  const stats = await api("/stats");
+  const statsById = Object.fromEntries(stats.map(s => [s.router_id, s]));
+
+  const body = document.getElementById("routersBody");
+  body.innerHTML = "";
+  document.getElementById("routersEmpty").style.display = routers.length ? "none" : "block";
+
+  const filterSel = document.getElementById("routerFilter");
+  const currentFilter = filterSel.value;
+  filterSel.innerHTML = "";
+  filterSel.appendChild(el("option", { value: "" }, ["Todos los routers"]));
+
+  routers.forEach(r => {
+    const s = statsById[r.id] || { sent: 0, failed: 0 };
+    const delBtn = el("button", { class: "danger" }, ["Eliminar"]);
+    delBtn.onclick = async () => {
+      if (!confirm("Eliminar el router '" + r.id + "'? Los mensajes ya enviados se conservan en el historial.")) return;
+      await api("/routers/" + encodeURIComponent(r.id), { method: "DELETE" });
+      loadRouters(); loadStats();
+    };
+    body.appendChild(el("tr", null, [
+      el("td", null, [r.id]),
+      el("td", null, [r.ip]),
+      el("td", { class: "muted" }, [r.numero || "-"]),
+      el("td", null, [String(s.sent)]),
+      el("td", null, [String(s.failed)]),
+      el("td", null, [delBtn]),
+    ]));
+
+    filterSel.appendChild(el("option", { value: r.id }, [r.id]));
+  });
+  filterSel.value = currentFilter;
+}
+
+async function loadMessages() {
+  const routerId = document.getElementById("routerFilter").value;
+  const path = routerId ? "/routers/" + encodeURIComponent(routerId) + "/messages" : "/messages";
+  const messages = await api(path);
+
+  const body = document.getElementById("messagesBody");
+  body.innerHTML = "";
+  document.getElementById("messagesEmpty").style.display = messages.length ? "none" : "block";
+
+  messages.forEach(m => {
+    const badge = m.status === "sent"
+      ? el("span", { class: "badge sent" }, ["✓ Enviado"])
+      : el("span", { class: "badge failed", title: m.error || "" }, ["✕ Fallido"]);
+    body.appendChild(el("tr", null, [
+      el("td", { class: "muted" }, [fmtDate(m.created_at)]),
+      el("td", null, [m.router_id]),
+      el("td", null, [m.phone]),
+      el("td", { class: "msg", title: m.message }, [m.message]),
+      el("td", null, [badge]),
+    ]));
+  });
+}
+
+async function refreshAll() {
+  try {
+    await Promise.all([loadStats(), loadRouters()]);
+    await loadMessages();
+    showContent();
+  } catch (e) {
+    if (!getApiKey()) showLocked();
+  }
+}
+
+document.getElementById("saveKeyBtn").onclick = () => {
+  setApiKey(document.getElementById("apiKeyInput").value.trim());
+  refreshAll();
+};
+document.getElementById("apiKeyInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("saveKeyBtn").click();
+});
+
+document.getElementById("routerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  const id = f.id.value.trim();
+  const body = {
+    ip: f.ip.value.trim(),
+    password: f.password.value,
+    numero: f.numero.value.trim() || null,
+  };
+  await api("/routers/" + encodeURIComponent(id), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  f.reset();
+  loadRouters(); loadStats();
+});
+
+document.getElementById("routerFilter").addEventListener("change", loadMessages);
+
+document.getElementById("apiKeyInput").value = getApiKey();
+if (getApiKey()) refreshAll(); else showLocked();
+</script>
+</body>
+</html>

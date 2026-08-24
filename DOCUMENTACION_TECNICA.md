@@ -195,68 +195,91 @@ Con IPs distintas, cada router aparece como una interfaz de red separada sin
 conflicto de subred, y cada uno necesita tambien el ajuste de metrica de la
 seccion 5 (uno por interfaz).
 
-## 7. Configuracion: `.env` + `routers.json`
+## 7. Dashboard y base de datos
 
-Un solo proceso de la API sirve **todos** los routers configurados. La
-configuracion se separa en dos archivos, ninguno de los dos versionado en
-git (ver `.gitignore`), cada uno con su plantilla `*.example` si versionada:
+Un solo proceso de la API sirve **todos** los routers configurados, y guarda
+tanto la configuracion de cada router como el historial de SMS en un
+archivo SQLite local, `sms_gateway.db` (se crea solo al arrancar, no
+versionado — ver `.gitignore`). El unico secreto que sigue viviendo en
+`.env` es `SMS_API_KEY`, la clave compartida de la API.
 
-- **`.env`** (secretos): `SMS_API_KEY` y las passwords de los routers.
-- **`routers.json`** (no-secreto): lista de `{"id", "ip"}` por router.
+`GET /` sirve un dashboard (`static/dashboard.html`, HTML+JS plano, sin
+dependencias externas) donde se administra todo desde el navegador:
 
-```json
-// routers.json
-[
-  {"id": "router1", "ip": "192.168.1.1"},
-  {"id": "router2", "ip": "192.168.2.1"}
-]
+- Pide la `SMS_API_KEY` una vez (queda en `localStorage` del navegador) y la
+  manda como header `X-API-Key` en cada llamada a la API — el dashboard no
+  inventa un mecanismo de autenticacion propio, reusa el mismo que ya
+  protege `/sms/send`.
+- **Resumen:** total de SMS enviados/fallidos, y un total por router.
+- **Routers:** tabla con id/ip/numero/enviados/fallidos, con alta (mismo
+  formulario sirve para editar, hace upsert por id) y baja.
+- **Mensajes:** historial completo, filtrable por router.
+
+### Esquema de la base de datos (`db.py`)
+
+```sql
+routers (id TEXT PK, ip TEXT, password TEXT, numero TEXT, created_at TEXT)
+messages (id INTEGER PK, router_id TEXT, phone TEXT, message TEXT,
+          status TEXT CHECK IN ('sent','failed'), error TEXT, created_at TEXT)
 ```
 
-```env
-# .env
-SMS_API_KEY=clave-secreta-compartida
-ZTE_ROUTER_PASSWORD=admin
-# password especifica de un router (opcional, sobreescribe la de arriba):
-ZTE_PASSWORD_ROUTER2=otra-password
-```
+Cada funcion de `db.py` abre y cierra su propia conexion `sqlite3` (una
+conexion no es segura para compartir entre threads, y FastAPI corre los
+endpoints `def` normales — no `async def` — en un threadpool).
 
-### Password por router
+### Migracion desde `routers.json` (version anterior del proyecto)
 
-Al arrancar, `api.py` calcula la password de cada router en `routers.json`
-buscando la variable de entorno `ZTE_PASSWORD_<ID EN MAYUSCULAS>` (donde
-`<ID>` es el campo `"id"` de ese router). Si no existe esa variable, usa
-`ZTE_ROUTER_PASSWORD` como default para todos. Esto permite que la mayoria
-de los routers compartan la misma password (`admin` o la que sea) y solo
-haga falta una entrada extra en `.env` para los que sean distintos.
-
-Agregar un router nuevo es agregar una linea a `routers.json` (y, si su
-password difiere del default, una variable a `.env`) — no hace falta tocar
-codigo, ni abrir un puerto nuevo, ni un `.bat` nuevo.
+Antes de esto, los routers se configuraban a mano en `routers.json` +
+variables `ZTE_PASSWORD_<ID>` en `.env` (ver commits/documentacion
+anteriores). Para no romper esa configuracion ya hecha, `db.init_db()`
+corre una migracion de una sola vez: si la tabla `routers` esta vacia y
+existe un `routers.json` en la carpeta del proyecto, importa cada entrada
+resolviendo su password de la misma forma que antes (`ZTE_PASSWORD_<ID>` o
+`ZTE_ROUTER_PASSWORD` como default). Despues de esa primera vez, el archivo
+`routers.json` ya no se vuelve a leer — toda la administracion pasa a ser
+via dashboard/API contra la base de datos. `routers.json.example` se
+mantiene solo como referencia de ese formato de migracion.
 
 ## 8. Endpoints de la API
 
-```
-GET  /health
-GET  /routers
-  -> [{"id": "router1", "ip": "192.168.1.1"}, ...]
+Todos (salvo `/health` y `GET /`) requieren el header `X-API-Key` si
+`SMS_API_KEY` esta definida en `.env`.
 
-POST /routers/{router_id}/sms/send
-  Header: X-API-Key: <clave>
-  Body:   {"phone": "+51987654321", "message": "texto"}
-  -> {"status": "sent", "router": "router1", "phone": "..."}
-  -> 404 si router_id no esta en routers.json
-  -> 401 si falta o no coincide X-API-Key (cuando SMS_API_KEY esta definida)
 ```
+GET    /health
+GET    /                          -> dashboard (HTML)
+
+GET    /routers                   -> [{"id","ip","numero","created_at"}, ...]
+PUT    /routers/{id}              Body: {"ip","password","numero"?}  -> crea o actualiza (upsert)
+DELETE /routers/{id}               -> {"status":"deleted","router":"..."}
+
+POST   /routers/{id}/sms/send     Body: {"phone","message"}
+  -> {"status":"sent","router":"...","phone":"..."}
+  -> 404 si el id no existe; 401 si falta/no coincide X-API-Key
+  -> registra el intento en `messages` (sent o failed, con el error si aplica)
+     independientemente del resultado
+
+GET    /messages?router_id=&limit=200      -> historial (todos los routers o uno)
+GET    /routers/{id}/messages?limit=200    -> historial de un router
+GET    /stats                              -> [{"router_id","numero","sent","failed"}, ...]
+```
+
+Agregar un router nuevo es un `PUT /routers/{id}` (desde el dashboard o por
+API) — no hace falta tocar codigo, archivos de configuracion, ni reiniciar
+el proceso.
 
 ## 9. Archivos del proyecto
 
 | Archivo | Rol |
 |---|---|
 | `zte_sms.py` | Cliente del protocolo del router (login, envio de SMS) |
-| `api.py` | API HTTP (FastAPI); carga `.env` y `routers.json`, expone un endpoint por router |
-| `diagnostico.py` | Script paso a paso para validar el protocolo contra un router real (independiente de `routers.json`, recibe ip/password por linea de comandos) |
+| `db.py` | Acceso a `sms_gateway.db` (SQLite): CRUD de routers, historial de mensajes, stats, migracion desde `routers.json` |
+| `api.py` | API HTTP (FastAPI); carga `.env`, inicializa la base, expone endpoints de routers/SMS/mensajes/stats y sirve el dashboard |
+| `static/dashboard.html` | Dashboard web (HTML+JS plano, sin dependencias externas) — resumen, alta/baja de routers, historial de mensajes |
+| `diagnostico.py` | Script paso a paso para validar el protocolo contra un router real (independiente de la base de datos, recibe ip/password por linea de comandos) |
 | `requirements.txt` | Dependencias Python |
-| `.env.example`, `routers.json.example` | Plantillas versionadas — copiar a `.env` / `routers.json` y completar |
+| `.env.example` | Plantilla versionada — copiar a `.env` y completar `SMS_API_KEY` |
+| `routers.json.example` | Formato de migracion de una sola vez (ver seccion 7) — los routers se administran por el dashboard de ahi en mas |
 | `configurar_vscode_gitbash.ps1` | Script opcional: configura Git Bash como terminal por defecto en VS Code (ver [MANUAL_INSTALACION.md](MANUAL_INSTALACION.md)) |
 
 ## 10. Troubleshooting rapido
@@ -268,3 +291,4 @@ POST /routers/{router_id}/sms/send
 | El router no aparece como adaptador de red | Sigue en modo CD-ROM | Seccion 4 |
 | Se pierde internet/intranet al conectar el modem | Conflicto de ruta por defecto | Seccion 5 |
 | Con varios routers, solo uno responde o hay timeouts intermitentes | Subred duplicada (todos en 192.168.0.1) | Seccion 6 |
+| El dashboard (`/`) queda pidiendo la API key y no carga nada | La clave pegada no coincide con `SMS_API_KEY` de `.env` (el navegador recibe 401) | Seccion 7 |

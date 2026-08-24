@@ -53,35 +53,31 @@ router — compartela para ajustar el algoritmo de login si hace falta
 
 ## 4. Configurar y levantar la API
 
-La API soporta varios routers a la vez. Los secretos van en `.env` y la
-lista de routers (id + ip) va en `routers.json` — ninguno de los dos se
-sube a control de versiones, se generan a partir de sus plantillas:
+La API soporta varios routers a la vez, guarda su configuracion y el
+historial de SMS en un archivo SQLite local (`sms_gateway.db`, se crea
+solo), y se administra desde un dashboard web — no hace falta editar
+ningun JSON a mano. El unico secreto que va en `.env` es la clave de la
+API:
 
 ```bash
 cd /d/Proyectos/Python/ZteSmsGateway
 cp .env.example .env
-cp routers.json.example routers.json
 ```
 
-Edita `.env` y pon una `SMS_API_KEY` propia (todo request a la API debe
-incluir el header `X-API-Key` con ese valor, ya que la API queda expuesta a
-toda la red local) y el `ZTE_ROUTER_PASSWORD` real si no es `admin`. Edita
-`routers.json` con el/los id + ip de tus routers, por ejemplo:
-
-```json
-[
-  {"id": "router1", "ip": "192.168.0.1"}
-]
-```
-
-Y levanta la API:
+Edita `.env` y pon una `SMS_API_KEY` propia (todo request a la API, y al
+dashboard, debe incluir esa clave, ya que la API queda expuesta a toda la
+red local). Y levanta la API:
 
 ```bash
 python -m uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
-Si tienes varios routers con passwords distintos entre si, ver la sección
-"Password por router" de [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md).
+Abre `http://localhost:8000/` en el navegador, pega tu `SMS_API_KEY` arriba
+a la derecha, y agrega tus routers desde ahi (id, ip, password, y
+opcionalmente el numero de la linea). El mismo dashboard muestra el total
+de SMS enviados por router y el historial de mensajes. Ver mas detalle en
+la seccion "Dashboard y base de datos" de
+[DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md).
 
 ## 5. Permitir el puerto en el firewall de Windows
 
@@ -96,7 +92,7 @@ netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow p
 
 ## 6. Enviar un SMS desde otro equipo de la red
 
-La URL incluye el id del router (el mismo que pusiste en `routers.json`).
+La URL incluye el id del router (el mismo que le pusiste en el dashboard).
 Desde Git Bash (`\` para continuar linea, comillas simples para el JSON):
 
 ```bash
@@ -112,7 +108,11 @@ Respuesta esperada:
 {"status": "sent", "router": "router1", "phone": "+51987654321"}
 ```
 
-Para ver que routers estan configurados: `GET http://<ip_de_esta_pc>:8000/routers`.
+Otros endpoints utiles (todos requieren `X-API-Key`):
+- `GET /routers` — routers configurados.
+- `PUT /routers/<id>` / `DELETE /routers/<id>` — crear, actualizar o borrar un router (lo mismo que hace el dashboard).
+- `GET /messages` o `GET /routers/<id>/messages` — historial de SMS enviados.
+- `GET /stats` — totales enviados/fallidos por router (lo que muestra el dashboard).
 
 ## Notas
 

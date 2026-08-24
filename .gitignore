@@ -2,6 +2,9 @@
 .env
 routers.json
 
+# Base de datos local: routers configurados + historial de SMS
+sms_gateway.db
+
 # Python
 __pycache__/
 *.pyc

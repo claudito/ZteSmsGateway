@@ -3,7 +3,7 @@ API HTTP que envuelve uno o varios ZTE MF920V para enviar SMS desde
 cualquier equipo de la red local, con historial en SQLite y un dashboard
 web para configurar routers y ver los mensajes enviados.
 
-Configuracion:
+Configuración:
     .env         -> SMS_API_KEY (secreto compartido de la API),
                     DASHBOARD_USER / DASHBOARD_PASSWORD (login del dashboard)
     sms_gateway.db -> routers (id, ip, password, numero) y mensajes enviados,
@@ -44,7 +44,7 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 
 class SendSmsRequest(BaseModel):
-    phone: str = Field(..., description="Numero destino, con codigo de pais. Ej: +51987654321")
+    phone: str = Field(..., description="Número destino, con código de país. Ej: +51987654321")
     message: str = Field(..., min_length=1, max_length=600)
 
 
@@ -61,7 +61,7 @@ class LoginRequest(BaseModel):
 
 def check_api_key(x_api_key: str | None):
     if API_KEY and x_api_key != API_KEY:
-        raise HTTPException(status_code=401, detail="API key invalida")
+        raise HTTPException(status_code=401, detail="API key inválida")
 
 
 def get_router_or_404(router_id: str) -> dict:

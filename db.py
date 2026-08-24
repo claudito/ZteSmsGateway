@@ -1,8 +1,8 @@
 """
 Almacenamiento SQLite: routers configurados y el historial de SMS enviados.
 
-Cada funcion abre y cierra su propia conexion (sqlite3 no es seguro para
-compartir una conexion entre threads, y FastAPI corre los endpoints `def`
+Cada función abre y cierra su propia conexión (sqlite3 no es seguro para
+compartir una conexión entre threads, y FastAPI corre los endpoints `def`
 normales en un threadpool).
 """
 import json
@@ -62,8 +62,8 @@ def init_db():
 
 
 def _seed_from_routers_json_once():
-    """Migracion de una sola vez: si la tabla routers esta vacia y existe un
-    routers.json (formato de la version anterior de este proyecto), importa
+    """Migración de una sola vez: si la tabla routers está vacía y existe un
+    routers.json (formato de la versión anterior de este proyecto), importa
     esas entradas usando las mismas variables de entorno de password que
     usaba api.py antes de moverse a SQLite."""
     if list_routers():

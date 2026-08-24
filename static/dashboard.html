@@ -88,7 +88,7 @@
           </div>
         </div>
         <div id="barsContainer" class="mt-2"></div>
-        <div id="statsEmpty" class="text-body-secondary small d-none">No hay routers configurados todavia.</div>
+        <div id="statsEmpty" class="text-body-secondary small d-none">No hay routers configurados todavía.</div>
       </div>
     </div>
 
@@ -107,7 +107,7 @@
               <tr>
                 <th><i class="bi bi-upc-scan"></i> ID</th>
                 <th><i class="bi bi-globe"></i> IP</th>
-                <th><i class="bi bi-phone-fill"></i> Numero</th>
+                <th><i class="bi bi-phone-fill"></i> Número</th>
                 <th><i class="bi bi-check-circle-fill"></i> Enviados</th>
                 <th><i class="bi bi-exclamation-triangle-fill"></i> Fallidos</th>
                 <th class="text-end">Acciones</th>
@@ -134,7 +134,7 @@
               <tr>
                 <th><i class="bi bi-clock-fill"></i> Fecha</th>
                 <th><i class="bi bi-router-fill"></i> Router</th>
-                <th><i class="bi bi-phone-fill"></i> Telefono</th>
+                <th><i class="bi bi-phone-fill"></i> Teléfono</th>
                 <th><i class="bi bi-chat-left-text-fill"></i> Mensaje</th>
                 <th>Estado</th>
               </tr>
@@ -142,7 +142,7 @@
             <tbody id="messagesBody"></tbody>
           </table>
         </div>
-        <div id="messagesEmpty" class="text-body-secondary small d-none">No hay mensajes enviados todavia.</div>
+        <div id="messagesEmpty" class="text-body-secondary small d-none">No hay mensajes enviados todavía.</div>
         <div class="d-flex justify-content-end align-items-center gap-2 mt-2">
           <span id="pageInfo" class="small text-body-secondary"></span>
           <button id="prevPageBtn" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-left"></i> Anterior</button>
@@ -176,7 +176,7 @@
             <input name="password" class="form-control" placeholder="password" autocomplete="off" />
           </div>
           <div class="mb-3">
-            <label class="form-label"><i class="bi bi-phone-fill"></i> Numero (opcional)</label>
+            <label class="form-label"><i class="bi bi-phone-fill"></i> Número (opcional)</label>
             <input name="numero" class="form-control" placeholder="+51987654321" autocomplete="off" />
           </div>
           <div id="routerFormError" class="text-danger small d-none"></div>
@@ -220,7 +220,7 @@
             <select name="router" id="sendSmsRouter" class="form-select" required></select>
           </div>
           <div class="mb-3">
-            <label class="form-label"><i class="bi bi-phone-fill"></i> Numero de celular</label>
+            <label class="form-label"><i class="bi bi-phone-fill"></i> Número de celular</label>
             <input name="phone" class="form-control" placeholder="+51987654321" autocomplete="off" required />
           </div>
           <div class="mb-3">
@@ -255,7 +255,7 @@ async function api(path, opts) {
   if (res.status === 401) {
     clearApiKey();
     showLogin();
-    throw new Error("Sesion invalida");
+    throw new Error("Sesión inválida");
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -499,7 +499,7 @@ async function loadMessages() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   document.getElementById("pageInfo").textContent =
-    total === 0 ? "" : "Pagina " + (messagesPage + 1) + " de " + totalPages + " (" + total + " mensajes)";
+    total === 0 ? "" : "Página " + (messagesPage + 1) + " de " + totalPages + " (" + total + " mensajes)";
   document.getElementById("prevPageBtn").disabled = messagesPage <= 0;
   document.getElementById("nextPageBtn").disabled = messagesPage >= totalPages - 1;
 }
@@ -531,7 +531,7 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     f.reset();
     refreshAll();
   } catch {
-    errBox.textContent = "Usuario o password invalidos.";
+    errBox.textContent = "Usuario o password inválidos.";
     errBox.classList.remove("d-none");
   }
 });
@@ -592,7 +592,7 @@ document.getElementById("sendSmsForm").addEventListener("submit", async e => {
   } catch (err) {
     errBox.textContent = err.message;
     errBox.classList.remove("d-none");
-    // el intento (exitoso o no) ya quedo registrado en el historial del router
+    // el intento (exitoso o no) ya quedó registrado en el historial del router
     loadStats(); loadMessages();
   }
 });

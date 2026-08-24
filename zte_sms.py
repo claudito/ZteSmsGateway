@@ -1,8 +1,8 @@
 """
-Cliente para enviar SMS a traves de la API web (goform) de routers/MiFi ZTE,
-como el ZTE MF920V con firmware Entel Peru (ufi/mf9xx, PASSWORD_ENCODE=true):
+Cliente para enviar SMS a través de la API web (goform) de routers/MiFi ZTE,
+como el ZTE MF920V con firmware Entel Perú (ufi/mf9xx, PASSWORD_ENCODE=true):
 login por Base64 del password, sin LD/SHA256, sin token AD y sin cookie de
-sesion (el router identifica la sesion por IP de origen).
+sesión (el router identifica la sesión por IP de origen).
 
 Protocolo obtenido leyendo js/service.js y js/config/config.js servidos por
 el propio router (192.168.0.1).

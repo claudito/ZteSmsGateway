@@ -1,5 +1,5 @@
 """
-Script de diagnostico: prueba paso a paso la conexion con el router ZTE MF920V
+Script de diagnóstico: prueba paso a paso la conexión con el router ZTE MF920V
 y muestra las respuestas crudas del dispositivo, para poder ajustar el
 protocolo si tu firmware se comporta distinto al esperado.
 
@@ -31,7 +31,7 @@ def main():
         print(f"   wa_inner_version={zte._wa_inner_version!r} cr_version={zte._cr_version!r}")
     except Exception as e:
         print(f"   ERROR al obtener versiones: {e}")
-        print("   -> Revisa que el router este conectado (USB o WiFi) y la IP sea correcta.")
+        print("   -> Revisa que el router esté conectado (USB o WiFi) y la IP sea correcta.")
         sys.exit(1)
 
     print("2) Consultando estado de login (loginfo) ...")
@@ -55,7 +55,7 @@ def main():
     try:
         result = zte.send_sms(numero, "Prueba API ZTE MF920V")
         print(f"   Respuesta SEND_SMS: {result}")
-        print("   OK - revisa si llego el SMS al celular destino.")
+        print("   OK - revisa si llegó el SMS al celular destino.")
     except Exception as e:
         print(f"   ERROR al enviar SMS: {e}")
         sys.exit(1)

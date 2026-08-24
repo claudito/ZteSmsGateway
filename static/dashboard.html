@@ -11,7 +11,9 @@
   .bar-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
   .bar-row .router-id { width: 100px; flex-shrink: 0; font-size: .8rem; color: var(--bs-secondary-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bar-track { flex: 1; background: var(--bs-secondary-bg); border-radius: .25rem; height: 18px; }
-  .bar-fill { background: var(--bs-primary); height: 100%; border-radius: .25rem; min-width: 2px; }
+  .bar-fill { display: flex; height: 100%; border-radius: .25rem; overflow: hidden; min-width: 2px; }
+  .bar-fill-sent { background: var(--bs-success); height: 100%; }
+  .bar-fill-failed { background: var(--bs-danger); height: 100%; }
   .bar-count { width: 150px; flex-shrink: 0; font-size: .8rem; text-align: right; }
   .msg-cell { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hero-num { font-size: 2rem; font-weight: 600; }
@@ -405,13 +407,19 @@ async function loadStats() {
     .forEach(r => {
       const total = r.sent + r.failed;
       const pct = Math.max(2, Math.round((total / maxTotal) * 100));
+      const sentPct = total > 0 ? Math.round((r.sent / total) * 100) : 0;
+      const failedPct = total > 0 ? 100 - sentPct : 0;
       const countLabel = el("div", { class: "bar-count" }, [
         total + " sms",
         r.failed > 0 ? el("span", { class: "text-danger" }, [" (" + r.failed + " fallidos)"]) : ""
       ]);
+      const fill = el("div", { class: "bar-fill", style: "width:" + pct + "%" }, [
+        el("div", { class: "bar-fill-sent", style: "width:" + sentPct + "%", title: r.sent + " enviados" }),
+        el("div", { class: "bar-fill-failed", style: "width:" + failedPct + "%", title: r.failed + " fallidos" })
+      ]);
       container.appendChild(el("div", { class: "bar-row" }, [
         el("div", { class: "router-id" }, [r.router_id]),
-        el("div", { class: "bar-track" }, [el("div", { class: "bar-fill", style: "width:" + pct + "%" })]),
+        el("div", { class: "bar-track" }, [fill]),
         countLabel
       ]));
     });

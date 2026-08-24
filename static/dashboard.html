@@ -26,7 +26,10 @@
       <i class="bi bi-envelope-paper-fill text-primary me-1"></i>
       Bandeja de Notificaciones SMS DIRIS Lima Este
     </span>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 align-items-center">
+      <span id="autoRefreshBadge" class="badge text-bg-light border text-body-secondary align-items-center gap-1 d-none">
+        <i class="bi bi-arrow-repeat"></i> Se actualiza cada 30s
+      </span>
       <button id="logoutBtn" class="btn btn-outline-secondary btn-sm d-none">
         <i class="bi bi-box-arrow-right"></i> Salir
       </button>
@@ -229,12 +232,16 @@ function showLogin() {
   document.getElementById("loginScreen").classList.add("d-flex");
   document.getElementById("content").classList.add("d-none");
   document.getElementById("logoutBtn").classList.add("d-none");
+  document.getElementById("autoRefreshBadge").classList.add("d-none");
+  document.getElementById("autoRefreshBadge").classList.remove("d-inline-flex");
 }
 function showContent() {
   document.getElementById("loginScreen").classList.add("d-none");
   document.getElementById("loginScreen").classList.remove("d-flex");
   document.getElementById("content").classList.remove("d-none");
   document.getElementById("logoutBtn").classList.remove("d-none");
+  document.getElementById("autoRefreshBadge").classList.remove("d-none");
+  document.getElementById("autoRefreshBadge").classList.add("d-inline-flex");
 }
 
 function applyTheme(theme) {

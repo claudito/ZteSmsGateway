@@ -1,4 +1,4 @@
-# Manual de Instalacion - SMS Gateway ZTE MF920V (PC nueva, desde cero)
+# Manual de Instalacion - Bandeja de Notificaciones SMS DIRIS Lima Este (PC nueva, desde cero)
 
 Guia paso a paso para instalar este SMS Gateway en una PC que **no tiene
 Python, ni VSCode, ni ninguna herramienta de desarrollo instalada**, y que
@@ -180,13 +180,17 @@ Abre `.env` con el Bloc de notas (o VS Code) y completa:
 
 ```
 SMS_API_KEY=CAMBIA-ESTO-POR-UNA-CLAVE-SECRETA
+DASHBOARD_USER=elige-un-usuario
+DASHBOARD_PASSWORD=elige-una-password
 ```
 
-> Es la clave que va a tener que mandar cualquiera que use la API o el
-> dashboard — es lo unico que evita que cualquiera en la red vea el
-> historial de SMS o envie mensajes con tus routers. Los routers en si
-> (ip, password, numero) **no se configuran aca**: se agregan desde el
-> dashboard web en el siguiente paso.
+> `SMS_API_KEY` es la clave que usan las aplicaciones que llaman a la API
+> directamente (el header `X-API-Key`). `DASHBOARD_USER` /
+> `DASHBOARD_PASSWORD` son las credenciales para entrar al dashboard web
+> con usuario y password — al iniciar sesion ahi, el dashboard obtiene la
+> `SMS_API_KEY` solo internamente, no hace falta que la tipees a mano. Los
+> routers en si (ip, password, numero) **no se configuran aca**: se agregan
+> desde el dashboard en el siguiente paso.
 
 ## Paso 9 - Arrancar la API
 
@@ -202,12 +206,14 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
 ## Paso 10 - Agregar tus routers desde el dashboard y probar
 
 1. Abre un navegador en esta misma PC y entra a `http://localhost:8000/`.
-2. Pega tu `SMS_API_KEY` (la que pusiste en `.env`) arriba a la derecha y
-   dale a "Guardar".
-3. En la seccion "Routers", llena el formulario de abajo por cada router
-   (id, ip — la que le asignaste en el Paso 4 —, password, y opcionalmente
-   el numero de la linea) y dale a "Agregar / actualizar". Deberian
-   aparecer en la tabla de arriba.
+2. Ingresa con el `DASHBOARD_USER` / `DASHBOARD_PASSWORD` que pusiste en
+   `.env`.
+3. En la seccion "Routers", dale a "Agregar router" (abre un formulario en
+   una ventana modal) por cada router: id, ip — la que le asignaste en el
+   Paso 4 —, password, y opcionalmente el numero de la linea. Al guardar
+   deberia aparecer en la tabla. El lapiz de cada fila permite editarlo
+   despues (dejar la password en blanco al editar la conserva tal cual
+   esta); el tacho lo elimina, pidiendo confirmacion.
 4. Envia un SMS de prueba desde otra terminal Git Bash (cambia `router1`
    por el id que hayas usado):
    ```bash

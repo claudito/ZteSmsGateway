@@ -3,202 +3,219 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SMS Gateway - Dashboard</title>
+<title>Bandeja de Notificaciones SMS - DIRIS Lima Este</title>
+<link rel="stylesheet" href="/static/vendor/bootstrap/bootstrap.min.css" />
+<link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css" />
 <style>
-  :root {
-    color-scheme: light;
-    --surface-1:      #fcfcfb;
-    --page:           #f9f9f7;
-    --text-primary:   #0b0b0b;
-    --text-secondary: #52514e;
-    --text-muted:     #898781;
-    --gridline:       #e1e0d9;
-    --baseline:       #c3c2b7;
-    --border:         rgba(11,11,11,0.10);
-    --series-1:       #2a78d6;
-    --status-good:    #0ca30c;
-    --status-critical:#d03b3b;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --surface-1:      #1a1a19;
-      --page:           #0d0d0d;
-      --text-primary:   #ffffff;
-      --text-secondary: #c3c2b7;
-      --text-muted:     #898781;
-      --gridline:       #2c2c2a;
-      --baseline:       #383835;
-      --border:         rgba(255,255,255,0.10);
-      --series-1:       #3987e5;
-      --status-good:    #0ca30c;
-      --status-critical:#e66767;
-    }
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --surface-1:      #1a1a19;
-    --page:           #0d0d0d;
-    --text-primary:   #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted:     #898781;
-    --gridline:       #2c2c2a;
-    --baseline:       #383835;
-    --border:         rgba(255,255,255,0.10);
-    --series-1:       #3987e5;
-    --status-good:    #0ca30c;
-    --status-critical:#e66767;
-  }
-
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--page);
-    color: var(--text-primary);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; flex-wrap: wrap; margin-bottom: 24px;
-  }
-  h1 { font-size: 20px; margin: 0; }
-  h2 { font-size: 15px; margin: 0 0 12px; color: var(--text-secondary); }
-  .card {
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 20px;
-  }
-  .apikey-box { display: flex; gap: 6px; align-items: center; }
-  .apikey-box input {
-    background: var(--surface-1); color: var(--text-primary);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 6px 8px; font-size: 13px; width: 200px;
-  }
-  button {
-    background: var(--series-1); color: white; border: none;
-    border-radius: 6px; padding: 7px 12px; font-size: 13px;
-    cursor: pointer; font-family: inherit;
-  }
-  button.secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-  button.danger { background: var(--status-critical); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .hero { display: flex; gap: 32px; align-items: baseline; margin-bottom: 16px; flex-wrap: wrap; }
-  .hero .num { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .hero .label { font-size: 13px; color: var(--text-secondary); }
-
+  body { background: var(--bs-tertiary-bg); }
   .bar-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-  .bar-row .id { width: 100px; flex-shrink: 0; font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar-track { flex: 1; background: var(--gridline); border-radius: 4px; height: 20px; position: relative; }
-  .bar-fill { background: var(--series-1); height: 100%; border-radius: 4px; min-width: 2px; }
-  .bar-count { width: 130px; flex-shrink: 0; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
-  .bar-count .failed { color: var(--status-critical); }
-
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--gridline); }
-  th { color: var(--text-muted); font-weight: 500; }
-  td.muted { color: var(--text-muted); }
-  td.msg { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
-  .badge.sent { color: var(--status-good); background: color-mix(in srgb, var(--status-good) 15%, transparent); }
-  .badge.failed { color: var(--status-critical); background: color-mix(in srgb, var(--status-critical) 15%, transparent); }
-
-  form.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
-  form.inline input, form.inline select {
-    background: var(--surface-1); color: var(--text-primary);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 6px 8px; font-size: 13px;
-  }
-  form.inline input[name="id"], form.inline input[name="ip"] { width: 120px; }
-  form.inline input[name="password"] { width: 110px; }
-  form.inline input[name="numero"] { width: 130px; }
-
-  .empty { color: var(--text-muted); font-size: 13px; padding: 8px 0; }
-  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-  .filter select {
-    background: var(--surface-1); color: var(--text-primary);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 6px 8px; font-size: 13px;
-  }
-  .locked { text-align: center; color: var(--text-muted); padding: 40px 0; }
+  .bar-row .router-id { width: 100px; flex-shrink: 0; font-size: .8rem; color: var(--bs-secondary-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; background: var(--bs-secondary-bg); border-radius: .25rem; height: 18px; }
+  .bar-fill { background: var(--bs-primary); height: 100%; border-radius: .25rem; min-width: 2px; }
+  .bar-count { width: 150px; flex-shrink: 0; font-size: .8rem; text-align: right; }
+  .msg-cell { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hero-num { font-size: 2rem; font-weight: 600; }
+  .login-wrap { min-height: 70vh; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>SMS Gateway</h1>
-    <div class="apikey-box">
-      <input id="apiKeyInput" type="password" placeholder="X-API-Key" />
-      <button id="saveKeyBtn">Guardar</button>
-    </div>
-  </header>
 
-  <div id="lockedMsg" class="locked" style="display:none">
-    Ingresa tu API key arriba para cargar el dashboard.
+<nav class="navbar navbar-expand bg-body border-bottom mb-4">
+  <div class="container" style="max-width:960px;">
+    <span class="navbar-brand mb-0">
+      <i class="bi bi-envelope-paper-fill text-primary me-1"></i>
+      Bandeja de Notificaciones SMS DIRIS Lima Este
+    </span>
+    <div class="d-flex gap-2">
+      <button id="logoutBtn" class="btn btn-outline-secondary btn-sm d-none">
+        <i class="bi bi-box-arrow-right"></i> Salir
+      </button>
+      <button id="themeToggle" class="btn btn-outline-secondary btn-sm" title="Cambiar tema">
+        <i class="bi bi-moon-stars-fill"></i>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="max-width:960px;">
+
+  <div id="loginScreen" class="d-none justify-content-center align-items-start login-wrap pt-5">
+    <div class="card shadow-sm" style="max-width:320px; width:100%;">
+      <div class="card-body p-4">
+        <h5 class="card-title mb-3"><i class="bi bi-shield-lock-fill text-primary"></i> Ingresar</h5>
+        <form id="loginForm">
+          <div class="input-group mb-2">
+            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+            <input name="username" class="form-control" placeholder="Usuario" autocomplete="off" required />
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input name="password" type="password" class="form-control" placeholder="Password" autocomplete="off" required />
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-key-fill"></i> Ingresar</button>
+          <div id="loginError" class="text-danger small mt-2 d-none"></div>
+        </form>
+      </div>
+    </div>
   </div>
 
-  <div id="content" style="display:none">
-    <div class="card">
-      <h2>Resumen</h2>
-      <div class="hero">
-        <div><div class="num" id="totalSent">0</div><div class="label">SMS enviados</div></div>
-        <div><div class="num" id="totalFailed" style="color:var(--status-critical)">0</div><div class="label">fallidos</div></div>
-        <div><div class="num" id="totalRouters">0</div><div class="label">routers</div></div>
+  <div id="content" class="d-none">
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h6 class="text-body-secondary mb-3"><i class="bi bi-bar-chart-fill"></i> Resumen</h6>
+        <div class="row text-center g-3 mb-2">
+          <div class="col-6 col-md-3">
+            <div class="hero-num" id="totalMessages">0</div>
+            <div class="small text-body-secondary"><i class="bi bi-envelope-fill"></i> SMS totales</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="hero-num text-success" id="totalSent">0</div>
+            <div class="small text-body-secondary"><i class="bi bi-check-circle-fill text-success"></i> enviados</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="hero-num text-danger" id="totalFailed">0</div>
+            <div class="small text-body-secondary"><i class="bi bi-exclamation-triangle-fill text-danger"></i> fallidos</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="hero-num" id="totalRouters">0</div>
+            <div class="small text-body-secondary"><i class="bi bi-router-fill"></i> routers</div>
+          </div>
+        </div>
+        <div id="barsContainer" class="mt-2"></div>
+        <div id="statsEmpty" class="text-body-secondary small d-none">No hay routers configurados todavia.</div>
       </div>
-      <div id="barsContainer"></div>
-      <div id="statsEmpty" class="empty" style="display:none">No hay routers configurados todavia.</div>
     </div>
 
-    <div class="card">
-      <h2>Routers</h2>
-      <table>
-        <thead><tr><th>ID</th><th>IP</th><th>Numero</th><th>Enviados</th><th>Fallidos</th><th></th></tr></thead>
-        <tbody id="routersBody"></tbody>
-      </table>
-      <div id="routersEmpty" class="empty" style="display:none">No hay routers configurados.</div>
-
-      <form class="inline" id="routerForm">
-        <input name="id" placeholder="id (ej. router1)" required />
-        <input name="ip" placeholder="192.168.1.1" required />
-        <input name="password" placeholder="password" required />
-        <input name="numero" placeholder="numero (opcional)" />
-        <button type="submit">Agregar / actualizar</button>
-      </form>
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="text-body-secondary mb-0"><i class="bi bi-router-fill"></i> Routers</h6>
+          <button id="addRouterBtn" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Agregar router</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th><i class="bi bi-upc-scan"></i> ID</th>
+                <th><i class="bi bi-globe"></i> IP</th>
+                <th><i class="bi bi-phone-fill"></i> Numero</th>
+                <th><i class="bi bi-check-circle-fill"></i> Enviados</th>
+                <th><i class="bi bi-exclamation-triangle-fill"></i> Fallidos</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="routersBody"></tbody>
+          </table>
+        </div>
+        <div id="routersEmpty" class="text-body-secondary small d-none">No hay routers configurados.</div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="toolbar">
-        <h2 style="margin:0">Mensajes</h2>
-        <div class="filter">
-          <select id="routerFilter"><option value="">Todos los routers</option></select>
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h6 class="text-body-secondary mb-0"><i class="bi bi-chat-left-text-fill"></i> Mensajes</h6>
+          <select id="routerFilter" class="form-select form-select-sm w-auto">
+            <option value="">Todos los routers</option>
+          </select>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th><i class="bi bi-clock-fill"></i> Fecha</th>
+                <th><i class="bi bi-router-fill"></i> Router</th>
+                <th><i class="bi bi-phone-fill"></i> Telefono</th>
+                <th><i class="bi bi-chat-left-text-fill"></i> Mensaje</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="messagesBody"></tbody>
+          </table>
+        </div>
+        <div id="messagesEmpty" class="text-body-secondary small d-none">No hay mensajes enviados todavia.</div>
+        <div class="d-flex justify-content-end align-items-center gap-2 mt-2">
+          <span id="pageInfo" class="small text-body-secondary"></span>
+          <button id="prevPageBtn" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-left"></i> Anterior</button>
+          <button id="nextPageBtn" class="btn btn-outline-secondary btn-sm">Siguiente <i class="bi bi-chevron-right"></i></button>
         </div>
       </div>
-      <table>
-        <thead><tr><th>Fecha</th><th>Router</th><th>Telefono</th><th>Mensaje</th><th>Estado</th></tr></thead>
-        <tbody id="messagesBody"></tbody>
-      </table>
-      <div id="messagesEmpty" class="empty" style="display:none">No hay mensajes enviados todavia.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal fade" id="routerModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="routerForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="routerModalTitle"><i class="bi bi-router-fill"></i> Agregar router</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-upc-scan"></i> ID</label>
+            <input name="id" class="form-control" placeholder="router1" autocomplete="off" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-globe"></i> IP</label>
+            <input name="ip" class="form-control" placeholder="192.168.1.1" autocomplete="off" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-lock-fill"></i> Password</label>
+            <input name="password" class="form-control" placeholder="password" autocomplete="off" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-phone-fill"></i> Numero (opcional)</label>
+            <input name="numero" class="form-control" placeholder="+51987654321" autocomplete="off" />
+          </div>
+          <div id="routerFormError" class="text-danger small d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Guardar</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
+<div class="modal fade" id="confirmModalEl" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill text-danger"></i> Confirmar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body"><p id="confirmModalMessage" class="mb-0"></p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="confirmModalOkBtn" class="btn btn-danger"><i class="bi bi-trash-fill"></i> Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/static/vendor/sweetalert2/sweetalert2.all.min.js"></script>
 <script>
 const KEY_STORAGE = "sms_gateway_api_key";
+const THEME_STORAGE = "sms_gateway_theme";
 
-function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ""; }
+function getApiKey() { return localStorage.getItem(KEY_STORAGE); }
 function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
+function clearApiKey() { localStorage.removeItem(KEY_STORAGE); }
 
 async function api(path, opts) {
   opts = opts || {};
-  opts.headers = Object.assign({}, opts.headers, { "X-API-Key": getApiKey() });
+  opts.headers = Object.assign({}, opts.headers, { "X-API-Key": getApiKey() || "" });
   const res = await fetch(path, opts);
   if (res.status === 401) {
-    showLocked();
-    throw new Error("API key invalida");
+    clearApiKey();
+    showLogin();
+    throw new Error("Sesion invalida");
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -207,13 +224,33 @@ async function api(path, opts) {
   return res.status === 204 ? null : res.json();
 }
 
-function showLocked() {
-  document.getElementById("lockedMsg").style.display = "block";
-  document.getElementById("content").style.display = "none";
+function showLogin() {
+  document.getElementById("loginScreen").classList.remove("d-none");
+  document.getElementById("loginScreen").classList.add("d-flex");
+  document.getElementById("content").classList.add("d-none");
+  document.getElementById("logoutBtn").classList.add("d-none");
 }
 function showContent() {
-  document.getElementById("lockedMsg").style.display = "none";
-  document.getElementById("content").style.display = "block";
+  document.getElementById("loginScreen").classList.add("d-none");
+  document.getElementById("loginScreen").classList.remove("d-flex");
+  document.getElementById("content").classList.remove("d-none");
+  document.getElementById("logoutBtn").classList.remove("d-none");
+}
+
+function applyTheme(theme) {
+  const effective = theme === "dark" ? "dark"
+    : theme === "light" ? "light"
+    : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-bs-theme", effective);
+  document.getElementById("themeToggle").innerHTML = effective === "dark"
+    ? '<i class="bi bi-sun-fill"></i>'
+    : '<i class="bi bi-moon-stars-fill"></i>';
+}
+function currentTheme() { return localStorage.getItem(THEME_STORAGE) || "system"; }
+function toggleTheme() {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_STORAGE, next);
+  applyTheme(next);
 }
 
 function fmtDate(iso) {
@@ -230,18 +267,79 @@ function el(tag, attrs, children) {
   (children || []).forEach(c => e.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
   return e;
 }
+function icon(cls) { return el("i", { class: "bi " + cls, "aria-hidden": "true" }, []); }
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 2500,
+  timerProgressBar: true,
+  didOpen: (t) => {
+    t.addEventListener("mouseenter", Swal.stopTimer);
+    t.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
+function toastSuccess(title) { Toast.fire({ icon: "success", title }); }
+
+const routerModalEl = document.getElementById("routerModal");
+const routerModal = new bootstrap.Modal(routerModalEl);
+const confirmModalEl = document.getElementById("confirmModalEl");
+const confirmModalBs = new bootstrap.Modal(confirmModalEl);
+
+function confirmModal(message) {
+  return new Promise(resolve => {
+    document.getElementById("confirmModalMessage").textContent = message;
+    const okBtn = document.getElementById("confirmModalOkBtn");
+    const onOk = () => { resolve(true); confirmModalBs.hide(); };
+    const onHidden = () => resolve(false);
+    okBtn.addEventListener("click", onOk, { once: true });
+    confirmModalEl.addEventListener("hidden.bs.modal", onHidden, { once: true });
+    confirmModalBs.show();
+  });
+}
+
+let routerFormMode = "add";
+
+function openAddRouterModal() {
+  routerFormMode = "add";
+  const f = document.getElementById("routerForm");
+  f.reset();
+  f.id.disabled = false;
+  f.password.required = true;
+  f.password.placeholder = "password";
+  document.getElementById("routerModalTitle").innerHTML = '<i class="bi bi-router-fill"></i> Agregar router';
+  document.getElementById("routerFormError").classList.add("d-none");
+  routerModal.show();
+}
+
+function openEditRouterModal(r) {
+  routerFormMode = "edit";
+  const f = document.getElementById("routerForm");
+  f.reset();
+  f.id.value = r.id;
+  f.id.disabled = true;
+  f.ip.value = r.ip;
+  f.numero.value = r.numero || "";
+  f.password.required = false;
+  f.password.placeholder = "dejar en blanco para no cambiar";
+  document.getElementById("routerModalTitle").innerHTML = '<i class="bi bi-pencil-fill"></i> Editar router';
+  document.getElementById("routerFormError").classList.add("d-none");
+  routerModal.show();
+}
 
 async function loadStats() {
   const stats = await api("/stats");
   const totalSent = stats.reduce((a, r) => a + r.sent, 0);
   const totalFailed = stats.reduce((a, r) => a + r.failed, 0);
+  document.getElementById("totalMessages").textContent = totalSent + totalFailed;
   document.getElementById("totalSent").textContent = totalSent;
   document.getElementById("totalFailed").textContent = totalFailed;
   document.getElementById("totalRouters").textContent = stats.length;
 
   const container = document.getElementById("barsContainer");
   container.innerHTML = "";
-  document.getElementById("statsEmpty").style.display = stats.length ? "none" : "block";
+  document.getElementById("statsEmpty").classList.toggle("d-none", stats.length > 0);
 
   const maxTotal = Math.max(1, ...stats.map(r => r.sent + r.failed));
   stats
@@ -251,26 +349,28 @@ async function loadStats() {
       const total = r.sent + r.failed;
       const pct = Math.max(2, Math.round((total / maxTotal) * 100));
       const countLabel = el("div", { class: "bar-count" }, [
-        total + (total === 1 ? " sms" : " sms"),
-        r.failed > 0 ? el("span", { class: "failed" }, [" (" + r.failed + " fallidos)"]) : ""
+        total + " sms",
+        r.failed > 0 ? el("span", { class: "text-danger" }, [" (" + r.failed + " fallidos)"]) : ""
       ]);
-      const row = el("div", { class: "bar-row" }, [
-        el("div", { class: "id" }, [r.router_id]),
+      container.appendChild(el("div", { class: "bar-row" }, [
+        el("div", { class: "router-id" }, [r.router_id]),
         el("div", { class: "bar-track" }, [el("div", { class: "bar-fill", style: "width:" + pct + "%" })]),
         countLabel
-      ]);
-      container.appendChild(row);
+      ]));
     });
 }
 
+let routersCache = [];
+
 async function loadRouters() {
   const routers = await api("/routers");
+  routersCache = routers;
   const stats = await api("/stats");
   const statsById = Object.fromEntries(stats.map(s => [s.router_id, s]));
 
   const body = document.getElementById("routersBody");
   body.innerHTML = "";
-  document.getElementById("routersEmpty").style.display = routers.length ? "none" : "block";
+  document.getElementById("routersEmpty").classList.toggle("d-none", routers.length > 0);
 
   const filterSel = document.getElementById("routerFilter");
   const currentFilter = filterSel.value;
@@ -279,19 +379,26 @@ async function loadRouters() {
 
   routers.forEach(r => {
     const s = statsById[r.id] || { sent: 0, failed: 0 };
-    const delBtn = el("button", { class: "danger" }, ["Eliminar"]);
+
+    const editBtn = el("button", { class: "btn btn-outline-secondary btn-sm me-1", title: "Editar" }, [icon("bi-pencil-fill")]);
+    editBtn.onclick = () => openEditRouterModal(r);
+
+    const delBtn = el("button", { class: "btn btn-outline-danger btn-sm", title: "Eliminar" }, [icon("bi-trash-fill")]);
     delBtn.onclick = async () => {
-      if (!confirm("Eliminar el router '" + r.id + "'? Los mensajes ya enviados se conservan en el historial.")) return;
+      const ok = await confirmModal("Eliminar el router '" + r.id + "'? Los mensajes ya enviados se conservan en el historial.");
+      if (!ok) return;
       await api("/routers/" + encodeURIComponent(r.id), { method: "DELETE" });
+      toastSuccess("Router eliminado");
       loadRouters(); loadStats();
     };
+
     body.appendChild(el("tr", null, [
       el("td", null, [r.id]),
       el("td", null, [r.ip]),
-      el("td", { class: "muted" }, [r.numero || "-"]),
+      el("td", { class: "text-body-secondary" }, [r.numero || "-"]),
       el("td", null, [String(s.sent)]),
       el("td", null, [String(s.failed)]),
-      el("td", null, [delBtn]),
+      el("td", { class: "text-end" }, [editBtn, delBtn]),
     ]));
 
     filterSel.appendChild(el("option", { value: r.id }, [r.id]));
@@ -299,27 +406,37 @@ async function loadRouters() {
   filterSel.value = currentFilter;
 }
 
+const PAGE_SIZE = 20;
+let messagesPage = 0;
+
 async function loadMessages() {
   const routerId = document.getElementById("routerFilter").value;
   const path = routerId ? "/routers/" + encodeURIComponent(routerId) + "/messages" : "/messages";
-  const messages = await api(path);
+  const offset = messagesPage * PAGE_SIZE;
+  const { total, items } = await api(path + "?limit=" + PAGE_SIZE + "&offset=" + offset);
 
   const body = document.getElementById("messagesBody");
   body.innerHTML = "";
-  document.getElementById("messagesEmpty").style.display = messages.length ? "none" : "block";
+  document.getElementById("messagesEmpty").classList.toggle("d-none", items.length > 0);
 
-  messages.forEach(m => {
+  items.forEach(m => {
     const badge = m.status === "sent"
-      ? el("span", { class: "badge sent" }, ["✓ Enviado"])
-      : el("span", { class: "badge failed", title: m.error || "" }, ["✕ Fallido"]);
+      ? el("span", { class: "badge text-bg-success" }, [icon("bi-check-circle-fill"), " Enviado"])
+      : el("span", { class: "badge text-bg-danger", title: m.error || "" }, [icon("bi-x-circle-fill"), " Fallido"]);
     body.appendChild(el("tr", null, [
-      el("td", { class: "muted" }, [fmtDate(m.created_at)]),
+      el("td", { class: "text-body-secondary" }, [fmtDate(m.created_at)]),
       el("td", null, [m.router_id]),
       el("td", null, [m.phone]),
-      el("td", { class: "msg", title: m.message }, [m.message]),
+      el("td", { class: "msg-cell", title: m.message }, [m.message]),
       el("td", null, [badge]),
     ]));
   });
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  document.getElementById("pageInfo").textContent =
+    total === 0 ? "" : "Pagina " + (messagesPage + 1) + " de " + totalPages + " (" + total + " mensajes)";
+  document.getElementById("prevPageBtn").disabled = messagesPage <= 0;
+  document.getElementById("nextPageBtn").disabled = messagesPage >= totalPages - 1;
 }
 
 async function refreshAll() {
@@ -328,17 +445,40 @@ async function refreshAll() {
     await loadMessages();
     showContent();
   } catch (e) {
-    if (!getApiKey()) showLocked();
+    if (!getApiKey()) showLogin();
   }
 }
 
-document.getElementById("saveKeyBtn").onclick = () => {
-  setApiKey(document.getElementById("apiKeyInput").value.trim());
-  refreshAll();
-};
-document.getElementById("apiKeyInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("saveKeyBtn").click();
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  const errBox = document.getElementById("loginError");
+  errBox.classList.add("d-none");
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: f.username.value, password: f.password.value }),
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    setApiKey(data.api_key);
+    f.reset();
+    refreshAll();
+  } catch {
+    errBox.textContent = "Usuario o password invalidos.";
+    errBox.classList.remove("d-none");
+  }
 });
+
+document.getElementById("logoutBtn").onclick = () => {
+  clearApiKey();
+  showLogin();
+};
+
+document.getElementById("themeToggle").onclick = toggleTheme;
+
+document.getElementById("addRouterBtn").onclick = openAddRouterModal;
 
 document.getElementById("routerForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -346,22 +486,43 @@ document.getElementById("routerForm").addEventListener("submit", async e => {
   const id = f.id.value.trim();
   const body = {
     ip: f.ip.value.trim(),
-    password: f.password.value,
     numero: f.numero.value.trim() || null,
   };
-  await api("/routers/" + encodeURIComponent(id), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  f.reset();
-  loadRouters(); loadStats();
+  if (f.password.value) body.password = f.password.value;
+
+  const errBox = document.getElementById("routerFormError");
+  errBox.classList.add("d-none");
+  try {
+    await api("/routers/" + encodeURIComponent(id), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    routerModal.hide();
+    toastSuccess(routerFormMode === "add" ? "Router creado" : "Router actualizado");
+    loadRouters(); loadStats();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.classList.remove("d-none");
+  }
 });
 
-document.getElementById("routerFilter").addEventListener("change", loadMessages);
+document.getElementById("routerFilter").addEventListener("change", () => {
+  messagesPage = 0;
+  loadMessages();
+});
 
-document.getElementById("apiKeyInput").value = getApiKey();
-if (getApiKey()) refreshAll(); else showLocked();
+document.getElementById("prevPageBtn").addEventListener("click", () => {
+  if (messagesPage > 0) { messagesPage--; loadMessages(); }
+});
+document.getElementById("nextPageBtn").addEventListener("click", () => {
+  messagesPage++; loadMessages();
+});
+
+applyTheme(currentTheme());
+if (getApiKey()) refreshAll(); else showLogin();
+
+setInterval(() => { if (getApiKey()) refreshAll(); }, 30000);
 </script>
 </body>
 </html>

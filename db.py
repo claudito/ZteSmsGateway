@@ -99,12 +99,17 @@ def get_router(router_id: str) -> dict | None:
         return dict(row) if row else None
 
 
-def upsert_router(router_id: str, ip: str, password: str, numero: str | None = None) -> dict:
+def upsert_router(router_id: str, ip: str, password: str | None, numero: str | None = None) -> dict:
+    """password=None mantiene la password actual (solo valido si el router ya existe)."""
     with _conn() as conn:
-        exists = conn.execute(
-            "SELECT 1 FROM routers WHERE id = ?", (router_id,)
+        existing = conn.execute(
+            "SELECT password FROM routers WHERE id = ?", (router_id,)
         ).fetchone()
-        if exists:
+        if password is None:
+            if not existing:
+                raise ValueError("password es requerida para crear un router nuevo")
+            password = existing["password"]
+        if existing:
             conn.execute(
                 "UPDATE routers SET ip = ?, password = ?, numero = ? WHERE id = ?",
                 (ip, password, numero, router_id),
@@ -134,18 +139,29 @@ def log_message(router_id: str, phone: str, message: str, status: str, error: st
         )
 
 
-def list_messages(router_id: str | None = None, limit: int = 200) -> list[dict]:
+def list_messages(router_id: str | None = None, limit: int = 20, offset: int = 0) -> list[dict]:
     with _conn() as conn:
         if router_id:
             rows = conn.execute(
-                "SELECT * FROM messages WHERE router_id = ? ORDER BY id DESC LIMIT ?",
-                (router_id, limit),
+                "SELECT * FROM messages WHERE router_id = ? ORDER BY id DESC LIMIT ? OFFSET ?",
+                (router_id, limit, offset),
             ).fetchall()
         else:
             rows = conn.execute(
-                "SELECT * FROM messages ORDER BY id DESC LIMIT ?", (limit,)
+                "SELECT * FROM messages ORDER BY id DESC LIMIT ? OFFSET ?", (limit, offset)
             ).fetchall()
         return [dict(r) for r in rows]
+
+
+def count_messages(router_id: str | None = None) -> int:
+    with _conn() as conn:
+        if router_id:
+            row = conn.execute(
+                "SELECT COUNT(*) AS c FROM messages WHERE router_id = ?", (router_id,)
+            ).fetchone()
+        else:
+            row = conn.execute("SELECT COUNT(*) AS c FROM messages").fetchone()
+        return row["c"]
 
 
 def stats() -> list[dict]:

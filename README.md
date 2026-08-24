@@ -1,4 +1,6 @@
-# SMS Gateway con ZTE MF920V
+# Bandeja de Notificaciones SMS - DIRIS Lima Este
+
+(SMS Gateway con ZTE MF920V)
 
 API HTTP que corre en una PC y usa el router MiFi ZTE MF920V (conectado por
 USB o WiFi) para enviar SMS. Otros equipos de la red llaman a esta API en
@@ -55,28 +57,33 @@ router — compartela para ajustar el algoritmo de login si hace falta
 
 La API soporta varios routers a la vez, guarda su configuracion y el
 historial de SMS en un archivo SQLite local (`sms_gateway.db`, se crea
-solo), y se administra desde un dashboard web — no hace falta editar
-ningun JSON a mano. El unico secreto que va en `.env` es la clave de la
-API:
+solo), y se administra desde un dashboard web con login — no hace falta
+editar ningun JSON a mano:
 
 ```bash
 cd /d/Proyectos/Python/ZteSmsGateway
 cp .env.example .env
 ```
 
-Edita `.env` y pon una `SMS_API_KEY` propia (todo request a la API, y al
-dashboard, debe incluir esa clave, ya que la API queda expuesta a toda la
-red local). Y levanta la API:
+Edita `.env` con:
+- `SMS_API_KEY` — clave que deben incluir las llamadas directas a la API
+  (header `X-API-Key`), ya que queda expuesta a toda la red local.
+- `DASHBOARD_USER` / `DASHBOARD_PASSWORD` — usuario y password para entrar
+  al dashboard web (`http://localhost:8000/`); al iniciar sesion ahi el
+  navegador obtiene la `SMS_API_KEY` automaticamente.
+
+Y levanta la API:
 
 ```bash
 python -m uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
-Abre `http://localhost:8000/` en el navegador, pega tu `SMS_API_KEY` arriba
-a la derecha, y agrega tus routers desde ahi (id, ip, password, y
-opcionalmente el numero de la linea). El mismo dashboard muestra el total
-de SMS enviados por router y el historial de mensajes. Ver mas detalle en
-la seccion "Dashboard y base de datos" de
+Abre `http://localhost:8000/` en el navegador, ingresa con tu
+`DASHBOARD_USER`/`DASHBOARD_PASSWORD`, y agrega tus routers desde ahi (id,
+ip, password, y opcionalmente el numero de la linea). El mismo dashboard
+muestra el total de SMS enviados por router, el historial de mensajes, y
+tiene un boton para cambiar entre tema claro/oscuro. Ver mas detalle en la
+seccion "Dashboard y base de datos" de
 [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md).
 
 ## 5. Permitir el puerto en el firewall de Windows

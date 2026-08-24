@@ -4,7 +4,8 @@ cualquier equipo de la red local, con historial en SQLite y un dashboard
 web para configurar routers y ver los mensajes enviados.
 
 Configuracion:
-    .env         -> SMS_API_KEY (secreto compartido de la API)
+    .env         -> SMS_API_KEY (secreto compartido de la API),
+                    DASHBOARD_USER / DASHBOARD_PASSWORD (login del dashboard)
     sms_gateway.db -> routers (id, ip, password, numero) y mensajes enviados,
                       administrados desde el dashboard web (GET /)
 
@@ -16,12 +17,14 @@ Llamar desde otro equipo de la red:
     Header: X-API-Key: <API_KEY>
     Body JSON: {"phone": "+51987654321", "message": "Hola"}
 """
+import hmac
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import db
@@ -31,10 +34,13 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 API_KEY = os.environ.get("SMS_API_KEY", "")
+DASHBOARD_USER = os.environ.get("DASHBOARD_USER", "")
+DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD", "")
 
 db.init_db()
 
 app = FastAPI(title="SMS Gateway (ZTE MF920V)")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 
 class SendSmsRequest(BaseModel):
@@ -44,8 +50,13 @@ class SendSmsRequest(BaseModel):
 
 class RouterIn(BaseModel):
     ip: str
-    password: str
+    password: str | None = None  # None al editar = mantener la password actual
     numero: str | None = None
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 
 def check_api_key(x_api_key: str | None):
@@ -70,6 +81,19 @@ def dashboard():
     return FileResponse(BASE_DIR / "static" / "dashboard.html")
 
 
+@app.post("/login")
+def login(req: LoginRequest):
+    ok = (
+        bool(DASHBOARD_USER)
+        and bool(DASHBOARD_PASSWORD)
+        and hmac.compare_digest(req.username, DASHBOARD_USER)
+        and hmac.compare_digest(req.password, DASHBOARD_PASSWORD)
+    )
+    if not ok:
+        raise HTTPException(status_code=401, detail="Usuario o password invalidos")
+    return {"api_key": API_KEY}
+
+
 # ---------- routers ----------
 
 @app.get("/routers")
@@ -81,7 +105,10 @@ def list_routers(x_api_key: str | None = Header(default=None)):
 @app.put("/routers/{router_id}")
 def upsert_router(router_id: str, req: RouterIn, x_api_key: str | None = Header(default=None)):
     check_api_key(x_api_key)
-    return db.upsert_router(router_id, req.ip, req.password, req.numero)
+    try:
+        return db.upsert_router(router_id, req.ip, req.password, req.numero)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.delete("/routers/{router_id}")
@@ -119,16 +146,32 @@ def send_sms(router_id: str, req: SendSmsRequest, x_api_key: str | None = Header
 # ---------- historial y estadisticas ----------
 
 @app.get("/messages")
-def list_messages(router_id: str | None = None, limit: int = 200, x_api_key: str | None = Header(default=None)):
+def list_messages(
+    router_id: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+    x_api_key: str | None = Header(default=None),
+):
     check_api_key(x_api_key)
-    return db.list_messages(router_id, limit)
+    return {
+        "total": db.count_messages(router_id),
+        "items": db.list_messages(router_id, limit, offset),
+    }
 
 
 @app.get("/routers/{router_id}/messages")
-def list_router_messages(router_id: str, limit: int = 200, x_api_key: str | None = Header(default=None)):
+def list_router_messages(
+    router_id: str,
+    limit: int = 20,
+    offset: int = 0,
+    x_api_key: str | None = Header(default=None),
+):
     check_api_key(x_api_key)
     get_router_or_404(router_id)
-    return db.list_messages(router_id, limit)
+    return {
+        "total": db.count_messages(router_id),
+        "items": db.list_messages(router_id, limit, offset),
+    }
 
 
 @app.get("/stats")

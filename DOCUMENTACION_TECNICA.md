@@ -1,4 +1,4 @@
-# Documentacion Tecnica - SMS Gateway ZTE MF920V
+# Documentacion Tecnica - Bandeja de Notificaciones SMS DIRIS Lima Este
 
 Este documento explica como funciona el proyecto por dentro: el protocolo real
 del router (obtenido por ingenieria inversa del propio firmware), las
@@ -200,20 +200,47 @@ seccion 5 (uno por interfaz).
 Un solo proceso de la API sirve **todos** los routers configurados, y guarda
 tanto la configuracion de cada router como el historial de SMS en un
 archivo SQLite local, `sms_gateway.db` (se crea solo al arrancar, no
-versionado — ver `.gitignore`). El unico secreto que sigue viviendo en
-`.env` es `SMS_API_KEY`, la clave compartida de la API.
+versionado — ver `.gitignore`). Los secretos que viven en `.env`:
+`SMS_API_KEY` (clave compartida de la API) y `DASHBOARD_USER` /
+`DASHBOARD_PASSWORD` (login del dashboard).
 
-`GET /` sirve un dashboard (`static/dashboard.html`, HTML+JS plano, sin
-dependencias externas) donde se administra todo desde el navegador:
+`GET /` sirve un dashboard (`static/dashboard.html`) construido con
+**Bootstrap 5.3** + **Bootstrap Icons**, servidos localmente desde
+`static/vendor/` (descargados una vez, no por CDN — asi el dashboard sigue
+funcionando aunque esa PC pierda internet). `api.py` monta esa carpeta con
+`StaticFiles` en `/static`.
 
-- Pide la `SMS_API_KEY` una vez (queda en `localStorage` del navegador) y la
-  manda como header `X-API-Key` en cada llamada a la API — el dashboard no
-  inventa un mecanismo de autenticacion propio, reusa el mismo que ya
-  protege `/sms/send`.
-- **Resumen:** total de SMS enviados/fallidos, y un total por router.
-- **Routers:** tabla con id/ip/numero/enviados/fallidos, con alta (mismo
-  formulario sirve para editar, hace upsert por id) y baja.
-- **Mensajes:** historial completo, filtrable por router.
+- **Login:** `POST /login` valida `username`/`password` (comparacion en
+  tiempo constante con `hmac.compare_digest`) contra `DASHBOARD_USER` /
+  `DASHBOARD_PASSWORD`; si coinciden, devuelve `{"api_key": SMS_API_KEY}`.
+  El dashboard guarda esa key en `localStorage` y la manda como header
+  `X-API-Key` en cada llamada siguiente — no inventa un mecanismo de
+  autenticacion propio para la API, solo agrega una pantalla de login
+  humana delante del mismo mecanismo que ya protegia `/sms/send`. Si
+  `DASHBOARD_USER`/`DASHBOARD_PASSWORD` no estan configuradas, el login
+  siempre falla (no hay acceso "abierto" por default).
+- **Tema:** boton claro/oscuro arriba a la derecha, usando el modo de color
+  nativo de Bootstrap 5.3 (`data-bs-theme` en `<html>`); la eleccion se
+  guarda en `localStorage` (`sms_gateway_theme`).
+- **Resumen:** total de SMS (enviados + fallidos), enviados, fallidos, y un
+  total por router.
+- **Routers — CRUD completo con modales de Bootstrap:**
+  - "Agregar router" abre un modal en blanco; el id es editable y la
+    password es obligatoria (no hay router previo del que heredarla).
+  - El boton de lapiz de cada fila abre el mismo modal pre-cargado con los
+    datos de ese router; el campo id queda deshabilitado (es la clave
+    primaria — para "renombrarlo" hay que borrar y crear de nuevo) y la
+    password queda opcional: si se deja en blanco, `PUT /routers/{id}` la
+    conserva (`db.upsert_router` solo la reemplaza si se envia una nueva;
+    ver seccion 8).
+  - El boton de tacho pide confirmacion en un modal de Bootstrap
+    (`bootstrap.Modal`), no con el `confirm()` nativo del navegador.
+  - Crear, actualizar o eliminar un router muestra un toast de confirmacion
+    (SweetAlert2, esquina superior derecha, se cierra solo a los 2.5s).
+- **Mensajes:** historial paginado (20 por pagina), filtrable por router.
+- **Auto-refresh:** todo el contenido (resumen, routers, mensajes de la
+  pagina actual) se vuelve a cargar solo cada 30s (`setInterval` en el JS),
+  sin perder la pagina/filtro que este viendo el usuario.
 
 ### Esquema de la base de datos (`db.py`)
 
@@ -242,15 +269,20 @@ mantiene solo como referencia de ese formato de migracion.
 
 ## 8. Endpoints de la API
 
-Todos (salvo `/health` y `GET /`) requieren el header `X-API-Key` si
-`SMS_API_KEY` esta definida en `.env`.
+Todos (salvo `/health`, `GET /` y `POST /login`) requieren el header
+`X-API-Key` si `SMS_API_KEY` esta definida en `.env`.
 
 ```
 GET    /health
 GET    /                          -> dashboard (HTML)
+POST   /login                     Body: {"username","password"}
+  -> {"api_key": "..."} si coinciden con DASHBOARD_USER/DASHBOARD_PASSWORD
+  -> 401 si no coinciden, o si esas variables no estan configuradas
 
 GET    /routers                   -> [{"id","ip","numero","created_at"}, ...]
-PUT    /routers/{id}              Body: {"ip","password","numero"?}  -> crea o actualiza (upsert)
+PUT    /routers/{id}              Body: {"ip","password"?,"numero"?}  -> crea o actualiza (upsert)
+  -> "password" omitido/null en un router EXISTENTE conserva la password actual
+  -> "password" omitido al CREAR un router nuevo -> 400 (es obligatoria la primera vez)
 DELETE /routers/{id}               -> {"status":"deleted","router":"..."}
 
 POST   /routers/{id}/sms/send     Body: {"phone","message"}
@@ -259,8 +291,10 @@ POST   /routers/{id}/sms/send     Body: {"phone","message"}
   -> registra el intento en `messages` (sent o failed, con el error si aplica)
      independientemente del resultado
 
-GET    /messages?router_id=&limit=200      -> historial (todos los routers o uno)
-GET    /routers/{id}/messages?limit=200    -> historial de un router
+GET    /messages?router_id=&limit=20&offset=0      -> historial paginado (todos los routers o uno)
+GET    /routers/{id}/messages?limit=20&offset=0    -> historial paginado de un router
+  -> {"total": N, "items": [{"id","router_id","phone","message","status","error","created_at"}, ...]}
+
 GET    /stats                              -> [{"router_id","numero","sent","failed"}, ...]
 ```
 
@@ -275,7 +309,8 @@ el proceso.
 | `zte_sms.py` | Cliente del protocolo del router (login, envio de SMS) |
 | `db.py` | Acceso a `sms_gateway.db` (SQLite): CRUD de routers, historial de mensajes, stats, migracion desde `routers.json` |
 | `api.py` | API HTTP (FastAPI); carga `.env`, inicializa la base, expone endpoints de routers/SMS/mensajes/stats y sirve el dashboard |
-| `static/dashboard.html` | Dashboard web (HTML+JS plano, sin dependencias externas) — resumen, alta/baja de routers, historial de mensajes |
+| `static/dashboard.html` | Dashboard web (Bootstrap 5.3 + Bootstrap Icons) — resumen, CRUD de routers con modales, historial de mensajes paginado |
+| `static/vendor/` | Bootstrap, Bootstrap Icons y SweetAlert2 descargados localmente (CSS, JS, fuentes) — no por CDN, para que el dashboard funcione sin internet |
 | `diagnostico.py` | Script paso a paso para validar el protocolo contra un router real (independiente de la base de datos, recibe ip/password por linea de comandos) |
 | `requirements.txt` | Dependencias Python |
 | `.env.example` | Plantilla versionada — copiar a `.env` y completar `SMS_API_KEY` |
@@ -291,4 +326,4 @@ el proceso.
 | El router no aparece como adaptador de red | Sigue en modo CD-ROM | Seccion 4 |
 | Se pierde internet/intranet al conectar el modem | Conflicto de ruta por defecto | Seccion 5 |
 | Con varios routers, solo uno responde o hay timeouts intermitentes | Subred duplicada (todos en 192.168.0.1) | Seccion 6 |
-| El dashboard (`/`) queda pidiendo la API key y no carga nada | La clave pegada no coincide con `SMS_API_KEY` de `.env` (el navegador recibe 401) | Seccion 7 |
+| El login del dashboard siempre dice "Usuario o password invalidos" | `DASHBOARD_USER`/`DASHBOARD_PASSWORD` no estan en `.env`, o no coinciden | Seccion 7 |

@@ -95,6 +95,16 @@ para que tome el cambio.
    ```
    Si devuelve algo (aunque sea HTML de error), el router ya es accesible.
 
+> **Importante — esto se puede repetir despues, no es cosa de una sola vez:**
+> si en cualquier momento el envio de SMS empieza a fallar con timeout y
+> nadie toco la configuracion, lo mas probable es que el router haya vuelto
+> a modo CD-ROM (por ejemplo si se desconecto el cable USB un momento, o la
+> PC se suspendio). Repite el punto 3-5 de este paso: buscar la unidad
+> `ZTEMODEM` en "Este equipo" y volver a correr `ResetCDROM.exe`. La
+> metrica de red que configuras en el Paso 6 normalmente se mantiene sola
+> despues de reconectar, no hace falta repetirla — pero si despues de
+> reconectar perdes internet/intranet de nuevo, si hay que repetirla.
+
 > Si vas a usar **un solo router**, salta directo al **Paso 6**.
 
 ## Paso 4 - Si vas a usar VARIOS routers: asignar una IP distinta a cada uno
@@ -214,8 +224,13 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
    deberia aparecer en la tabla. El lapiz de cada fila permite editarlo
    despues (dejar la password en blanco al editar la conserva tal cual
    esta); el tacho lo elimina, pidiendo confirmacion.
-4. Envia un SMS de prueba desde otra terminal Git Bash (cambia `router1`
-   por el id que hayas usado):
+4. Envia un SMS de prueba. La forma mas simple es desde el propio
+   dashboard: boton **"Enviar SMS"** (junto a "Agregar router") — abre un
+   modal donde eliges el router, el numero de celular y el mensaje. Si
+   falla, el modal muestra el error tal cual lo devuelve el router (por
+   ejemplo timeout de conexion — ver la nota del Paso 3 sobre el modo
+   CD-ROM). Tambien se puede probar por linea de comandos, desde otra
+   terminal Git Bash (cambia `router1` por el id que hayas usado):
    ```bash
    curl -X POST http://<ip_de_esta_pc>:8000/routers/router1/sms/send \
      -H "Content-Type: application/json" \
@@ -223,9 +238,10 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
      -d '{"phone": "+51987654321", "message": "Prueba"}'
    ```
    Respuesta esperada: `{"status":"sent","router":"router1","phone":"+51987654321"}`.
-5. Recarga el dashboard: deberias ver el mensaje en "Resumen" y en la
-   tabla de "Mensajes". Repite el paso 4 cambiando `router1` por cada id
-   que hayas configurado.
+5. El dashboard se actualiza solo cada 30s (indicador arriba a la derecha),
+   asi que en unos segundos deberias ver el mensaje reflejado en "Resumen"
+   y en la tabla de "Mensajes" sin necesidad de recargar la pagina. Repite
+   el punto 4 para cada router que hayas configurado.
 
 ## Paso 11 - Si algo falla: diagnostico
 

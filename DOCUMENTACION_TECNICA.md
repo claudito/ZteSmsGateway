@@ -128,9 +128,33 @@ CD-ROM -> red, sin pasar por el instalador completo. Al ejecutarla:
   **"Remote NDIS based Internet Sharing Device"**, con una IP asignada por
   DHCP en la subred `192.168.0.0/24` (o la que tenga configurada ese router).
 
-Hay que repetirlo una vez por router, la primera vez que se conecta a una PC
-en particular (el "modo red" no queda recordado por el router en abstracto,
-sino que depende de la negociacion USB con cada PC/puerto).
+**Esto no es un ajuste de una sola vez.** Hay que repetirlo cada vez que el
+router pierde y recupera la conexion USB con esa PC — no solo la primera
+vez que se conecta. En esta misma sesion volvio a pasar despues de que el
+router quedo un rato desconectado (probablemente al desenchufar/enchufar el
+cable, o alguna suspension de la PC): Windows lo volvio a mostrar como
+CD-ROM, `curl http://192.168.0.1/` empezo a dar timeout, y hubo que correr
+`ResetCDROM.exe` de nuevo para que reapareciera el adaptador RNDIS.
+
+**Sintoma para reconocerlo:** el envio de SMS (desde el dashboard o la API)
+empieza a fallar con un error de conexion/timeout aunque antes funcionaba y
+nadie toco la configuracion. Diagnostico rapido:
+
+```powershell
+Get-NetAdapter | Where-Object { $_.InterfaceDescription -match "RNDIS" }
+```
+
+Si no devuelve nada, el router volvio a modo CD-ROM — repetir el paso de
+`ResetCDROM.exe` (ubicar la unidad con
+`Get-CimInstance Win32_CDROMDrive | Select-Object Drive, VolumeName`,
+buscando el volumen `ZTEMODEM`).
+
+**Buena noticia comprobada:** la metrica de la interfaz (seccion 5, el
+`Set-NetIPInterface ... -InterfaceMetric 6000`) generalmente **sobrevive**
+a este ciclo de reconexion sin tener que repetir el paso de administrador —
+Windows parece recordarla para esa misma interfaz. Igual conviene
+verificarla con `Get-NetRoute -DestinationPrefix "0.0.0.0/0"` despues de
+reconectar, por si acaso.
 
 ## 5. Particularidad: conflicto de ruta de red por defecto
 
@@ -237,10 +261,19 @@ funcionando aunque esa PC pierda internet). `api.py` monta esa carpeta con
     (`bootstrap.Modal`), no con el `confirm()` nativo del navegador.
   - Crear, actualizar o eliminar un router muestra un toast de confirmacion
     (SweetAlert2, esquina superior derecha, se cierra solo a los 2.5s).
+- **Enviar SMS:** boton verde junto a "Agregar router" que abre un modal
+  para mandar un SMS de prueba: elegir router (select poblado desde
+  `GET /routers`, preseleccionando `router1` si existe), numero y mensaje.
+  Llama al mismo `POST /routers/{id}/sms/send` que usaria cualquier cliente
+  externo. Si falla (por ejemplo el modem no responde), el modal muestra el
+  error tal cual lo devuelve la API y queda abierto para reintentar — y de
+  todas formas refresca "Resumen"/"Mensajes", porque el intento (exitoso o
+  no) ya quedo registrado en el historial.
 - **Mensajes:** historial paginado (20 por pagina), filtrable por router.
 - **Auto-refresh:** todo el contenido (resumen, routers, mensajes de la
   pagina actual) se vuelve a cargar solo cada 30s (`setInterval` en el JS),
-  sin perder la pagina/filtro que este viendo el usuario.
+  con un indicador visible ("Se actualiza cada 30s") junto al boton
+  "Salir", sin perder la pagina/filtro que este viendo el usuario.
 
 ### Esquema de la base de datos (`db.py`)
 
@@ -324,6 +357,7 @@ el proceso.
 | Login falla, `LD` vacio | Firmware distinto al documentado | Seccion 3 |
 | "Acceso denegado" en PowerShell | Falta abrir PowerShell como administrador manualmente | Seccion 5 |
 | El router no aparece como adaptador de red | Sigue en modo CD-ROM | Seccion 4 |
+| El envio de SMS empieza a fallar con timeout, y antes funcionaba (nadie cambio nada) | El router volvio a modo CD-ROM tras perder la conexion USB — no es un ajuste de una sola vez | Seccion 4 |
 | Se pierde internet/intranet al conectar el modem | Conflicto de ruta por defecto | Seccion 5 |
 | Con varios routers, solo uno responde o hay timeouts intermitentes | Subred duplicada (todos en 192.168.0.1) | Seccion 6 |
 | El login del dashboard siempre dice "Usuario o password invalidos" | `DASHBOARD_USER`/`DASHBOARD_PASSWORD` no estan en `.env`, o no coinciden | Seccion 7 |

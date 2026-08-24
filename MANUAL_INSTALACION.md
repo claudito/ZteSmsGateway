@@ -17,30 +17,60 @@ Si algo falla en el camino y quieres entender el porque tecnico, revisa
   que pueda hacer dos pasos puntuales por ti) - se explica exactamente donde
   hace falta.
 
+Todos los comandos de esta guia estan escritos para **Git Bash** (la
+terminal que instala Git para Windows). Los pasos 6 y 7 son la unica
+excepcion: usan comandos de red que solo existen en PowerShell.
+
 ---
 
-## Paso 1 - Instalar Python
+## Paso 1 - Instalar Python, Git Bash y VS Code
 
-1. En el navegador de la PC nueva, ir a https://www.python.org/downloads/
-2. Descargar la version mas reciente para Windows y ejecutar el instalador.
-3. **Importante:** en la primera pantalla del instalador, marcar la casilla
+1. **Python:** ir a https://www.python.org/downloads/, descargar la version
+   mas reciente para Windows y ejecutar el instalador.
+   **Importante:** en la primera pantalla del instalador, marcar la casilla
    **"Add python.exe to PATH"** antes de darle a "Install Now".
-4. Al terminar, abrir el Simbolo del sistema (`cmd`) o PowerShell y escribir:
-   ```
+2. **Git Bash:** ir a https://git-scm.com/downloads/win, descargar e
+   instalar "Git for Windows" (dejar las opciones por defecto esta bien).
+   Esto instala la terminal **Git Bash** que se usa en el resto de esta
+   guia (y trae `curl` incluido).
+3. **VS Code** (opcional, pero recomendado para editar `.env` /
+   `routers.json` mas comodo que con el Bloc de notas): ir a
+   https://code.visualstudio.com/download, descargar e instalar "VS Code"
+   para Windows (dejar las opciones por defecto esta bien).
+4. Al terminar, busca "Git Bash" en el menu Inicio, abrelo, y verifica:
+   ```bash
    python --version
    ```
    Debe mostrar algo como `Python 3.13.x`. Si dice que no reconoce el
    comando, reinicia la PC y vuelve a probar (a veces hace falta para que
    tome el cambio del PATH).
 
+### Configurar Git Bash como terminal por defecto en VS Code
+
+Si instalaste VS Code, su terminal integrada abre PowerShell por defecto.
+Para que abra Git Bash en su lugar (y no tengas que cambiarla a mano cada
+vez), este proyecto trae un script que lo configura solo:
+
+```bash
+powershell -ExecutionPolicy Bypass -File configurar_vscode_gitbash.ps1
+```
+
+Esto edita el `settings.json` de VS Code agregando Git Bash como terminal
+por defecto, sin tocar el resto de tu configuracion (guarda un backup
+`settings.json.bak` antes de escribir). Si tu `settings.json` ya tenia
+comentarios y el script no pudo editarlo solo, te va a mostrar en pantalla
+el fragmento exacto para pegar a mano (Ctrl+, en VS Code, luego el icono de
+"Abrir configuracion (JSON)" arriba a la derecha). Reinicia VS Code despues
+para que tome el cambio.
+
 ## Paso 2 - Copiar el proyecto e instalar dependencias
 
 1. Copia la carpeta del proyecto a, por ejemplo, `C:\SMSGateway`.
-2. Abre una terminal dentro de esa carpeta (Shift + clic derecho dentro de
-   la carpeta en el Explorador > "Abrir ventana de PowerShell aqui", o
-   `cd C:\SMSGateway` desde una terminal ya abierta).
+2. Abre Git Bash dentro de esa carpeta (clic derecho sobre la carpeta en el
+   Explorador de archivos > **"Git Bash Here"**; si no aparece esa opcion,
+   abre Git Bash normal y usa `cd /c/SMSGateway`).
 3. Instala las dependencias (no hace falta entorno virtual):
-   ```
+   ```bash
    pip install -r requirements.txt
    ```
 
@@ -59,8 +89,8 @@ Si algo falla en el camino y quieres entender el porque tecnico, revisa
    buscador de Windows (o Panel de Control > Redes). Debe aparecer uno
    nuevo, con un nombre parecido a **"Remote NDIS based Internet Sharing
    Device"**, en estado conectado.
-5. Confirma que respondes al router desde una terminal:
-   ```
+5. Confirma que respondes al router desde Git Bash:
+   ```bash
    curl http://192.168.0.1/
    ```
    Si devuelve algo (aunque sea HTML de error), el router ya es accesible.
@@ -99,14 +129,15 @@ mismo tiempo. La primera vez que cada uno se conecta a **esta** PC, hay que
 repetir el Paso 3.2-3.3 (`ResetCDROM.exe`) para ese router - despues de
 eso queda "recordado" mientras uses ese mismo puerto/router.
 
-## Paso 6 - Arreglar el conflicto de ruta de red (requiere Administrador)
+## Paso 6 - Arreglar el conflicto de ruta de red (requiere Administrador + PowerShell)
 
 Al conectarse, los routers intentan volverse la puerta de enlace principal
 de internet de la PC, lo que puede hacerte perder acceso a internet o a la
 red interna de tu institucion. Para evitarlo, **esto lo tiene que hacer
-alguien con permisos de administrador**, abriendo PowerShell manualmente
-(no funciona intentarlo desde un script sin interaccion humana, porque
-Windows pide confirmar con un clic):
+alguien con permisos de administrador, y en PowerShell** (los comandos de
+este paso no existen en Git Bash porque son cmdlets nativos de Windows).
+No funciona intentarlo desde un script sin interaccion humana, porque
+Windows pide confirmar con un clic:
 
 1. Busca "PowerShell" en el menu Inicio, clic derecho > **"Ejecutar como
    administrador"**.
@@ -138,11 +169,12 @@ netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow p
 
 ## Paso 8 - Configurar `.env` y `routers.json`
 
-En la carpeta del proyecto (`C:\SMSGateway`), copia las dos plantillas:
+De vuelta en Git Bash, en la carpeta del proyecto (`C:\SMSGateway`), copia
+las dos plantillas:
 
-```
-copy .env.example .env
-copy routers.json.example routers.json
+```bash
+cp .env.example .env
+cp routers.json.example routers.json
 ```
 
 Abre `.env` con el Bloc de notas y completa:
@@ -178,9 +210,9 @@ nada mas ni reinstalar nada.
 
 ## Paso 9 - Arrancar la API
 
-Desde una terminal, dentro de `C:\SMSGateway`:
+Desde Git Bash, dentro de `C:\SMSGateway`:
 
-```
+```bash
 python -m uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
@@ -189,17 +221,18 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
 
 ## Paso 10 - Probar
 
-1. Confirma que la API reconocio tus routers:
-   ```
+1. Abre otra ventana de Git Bash y confirma que la API reconocio tus
+   routers:
+   ```bash
    curl http://localhost:8000/routers
    ```
    Debe listar los ids e IPs que pusiste en `routers.json`.
 2. Envia un SMS de prueba (cambia `router1` por el id que quieras usar):
-   ```
-   curl -X POST http://<ip_de_esta_pc>:8000/routers/router1/sms/send ^
-     -H "Content-Type: application/json" ^
-     -H "X-API-Key: CAMBIA-ESTO-POR-UNA-CLAVE-SECRETA" ^
-     -d "{\"phone\": \"+51987654321\", \"message\": \"Prueba\"}"
+   ```bash
+   curl -X POST http://<ip_de_esta_pc>:8000/routers/router1/sms/send \
+     -H "Content-Type: application/json" \
+     -H "X-API-Key: CAMBIA-ESTO-POR-UNA-CLAVE-SECRETA" \
+     -d '{"phone": "+51987654321", "message": "Prueba"}'
    ```
    Respuesta esperada: `{"status":"sent","router":"router1","phone":"+51987654321"}`.
 3. Repite cambiando `router1` por cada id que hayas configurado.
@@ -209,7 +242,7 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
 Corre esto para ver, paso a paso, en que falla la comunicacion con un router
 en particular (cambia el numero, password e IP segun corresponda):
 
-```
+```bash
 python diagnostico.py +51987654321 admin 192.168.1.1
 ```
 

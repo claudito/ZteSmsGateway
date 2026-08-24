@@ -257,6 +257,7 @@ POST /routers/{router_id}/sms/send
 | `diagnostico.py` | Script paso a paso para validar el protocolo contra un router real (independiente de `routers.json`, recibe ip/password por linea de comandos) |
 | `requirements.txt` | Dependencias Python |
 | `.env.example`, `routers.json.example` | Plantillas versionadas — copiar a `.env` / `routers.json` y completar |
+| `configurar_vscode_gitbash.ps1` | Script opcional: configura Git Bash como terminal por defecto en VS Code (ver [MANUAL_INSTALACION.md](MANUAL_INSTALACION.md)) |
 
 ## 10. Troubleshooting rapido
 

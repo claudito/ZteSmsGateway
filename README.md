@@ -31,8 +31,8 @@ WiFi que emite el propio MF920V (SSID de la etiqueta) como alternativa.
 
 ## 2. Instalar dependencias
 
-```
-cd D:\Proyectos\Python\ZteSmsGateway
+```bash
+cd /d/Proyectos/Python/ZteSmsGateway
 pip install -r requirements.txt
 ```
 
@@ -42,7 +42,7 @@ Antes de levantar la API, valida que el protocolo funcione contra tu
 firmware real (puede variar la forma de hashear el password entre modelos
 ZTE):
 
-```
+```bash
 python diagnostico.py +51987654321 admin
 ```
 
@@ -57,10 +57,10 @@ La API soporta varios routers a la vez. Los secretos van en `.env` y la
 lista de routers (id + ip) va en `routers.json` — ninguno de los dos se
 sube a control de versiones, se generan a partir de sus plantillas:
 
-```
-cd D:\Proyectos\Python\ZteSmsGateway
-copy .env.example .env
-copy routers.json.example routers.json
+```bash
+cd /d/Proyectos/Python/ZteSmsGateway
+cp .env.example .env
+cp routers.json.example routers.json
 ```
 
 Edita `.env` y pon una `SMS_API_KEY` propia (todo request a la API debe
@@ -76,7 +76,7 @@ toda la red local) y el `ZTE_ROUTER_PASSWORD` real si no es `admin`. Edita
 
 Y levanta la API:
 
-```
+```bash
 python -m uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
@@ -86,21 +86,24 @@ Si tienes varios routers con passwords distintos entre si, ver la sección
 ## 5. Permitir el puerto en el firewall de Windows
 
 Para que otros equipos de la red puedan llegar al puerto 8000, hay que
-crear una regla de entrada (ejecutar como administrador):
+crear una regla de entrada. Esto requiere **PowerShell como administrador**
+(no funciona desde Git Bash sin privilegios, ni de forma automatizada — hay
+que abrir PowerShell manualmente y aprobar el UAC):
 
-```
+```powershell
 netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow protocol=TCP localport=8000
 ```
 
 ## 6. Enviar un SMS desde otro equipo de la red
 
-La URL incluye el id del router (el mismo que pusiste en `routers.json`):
+La URL incluye el id del router (el mismo que pusiste en `routers.json`).
+Desde Git Bash (`\` para continuar linea, comillas simples para el JSON):
 
-```
-curl -X POST http://<ip_de_esta_pc>:8000/routers/router1/sms/send ^
-  -H "Content-Type: application/json" ^
-  -H "X-API-Key: pon-aqui-una-clave-secreta" ^
-  -d "{\"phone\": \"+51987654321\", \"message\": \"Hola desde la API\"}"
+```bash
+curl -X POST http://<ip_de_esta_pc>:8000/routers/router1/sms/send \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: pon-aqui-una-clave-secreta" \
+  -d '{"phone": "+51987654321", "message": "Hola desde la API"}'
 ```
 
 Respuesta esperada:

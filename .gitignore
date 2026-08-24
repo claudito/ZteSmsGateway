@@ -1,0 +1,12 @@
+# Secretos y configuracion propia de cada instalacion (usar los .example)
+.env
+routers.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Restos de pruebas
+.api_key.txt

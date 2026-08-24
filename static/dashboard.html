@@ -94,7 +94,10 @@
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h6 class="text-body-secondary mb-0"><i class="bi bi-router-fill"></i> Routers</h6>
-          <button id="addRouterBtn" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Agregar router</button>
+          <div class="d-flex gap-2">
+            <button id="sendSmsBtn" class="btn btn-success btn-sm"><i class="bi bi-send-fill"></i> Enviar SMS</button>
+            <button id="addRouterBtn" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Agregar router</button>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
@@ -201,6 +204,38 @@
   </div>
 </div>
 
+<div class="modal fade" id="sendSmsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="sendSmsForm">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-send-fill text-success"></i> Enviar SMS de prueba</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-router-fill"></i> Router</label>
+            <select name="router" id="sendSmsRouter" class="form-select" required></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-phone-fill"></i> Numero de celular</label>
+            <input name="phone" class="form-control" placeholder="+51987654321" autocomplete="off" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label"><i class="bi bi-chat-left-text-fill"></i> Mensaje</label>
+            <textarea name="message" class="form-control" rows="3" maxlength="600" placeholder="Texto del SMS" required></textarea>
+          </div>
+          <div id="sendSmsError" class="text-danger small d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success"><i class="bi bi-send-fill"></i> Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="/static/vendor/sweetalert2/sweetalert2.all.min.js"></script>
 <script>
@@ -293,6 +328,8 @@ const routerModalEl = document.getElementById("routerModal");
 const routerModal = new bootstrap.Modal(routerModalEl);
 const confirmModalEl = document.getElementById("confirmModalEl");
 const confirmModalBs = new bootstrap.Modal(confirmModalEl);
+const sendSmsModalEl = document.getElementById("sendSmsModal");
+const sendSmsModal = new bootstrap.Modal(sendSmsModalEl);
 
 function confirmModal(message) {
   return new Promise(resolve => {
@@ -333,6 +370,19 @@ function openEditRouterModal(r) {
   document.getElementById("routerModalTitle").innerHTML = '<i class="bi bi-pencil-fill"></i> Editar router';
   document.getElementById("routerFormError").classList.add("d-none");
   routerModal.show();
+}
+
+function openSendSmsModal() {
+  const f = document.getElementById("sendSmsForm");
+  f.reset();
+  document.getElementById("sendSmsError").classList.add("d-none");
+
+  const sel = document.getElementById("sendSmsRouter");
+  sel.innerHTML = "";
+  routersCache.forEach(r => sel.appendChild(el("option", { value: r.id }, [r.id])));
+  if (routersCache.some(r => r.id === "router1")) sel.value = "router1";
+
+  sendSmsModal.show();
 }
 
 async function loadStats() {
@@ -511,6 +561,31 @@ document.getElementById("routerForm").addEventListener("submit", async e => {
   } catch (err) {
     errBox.textContent = err.message;
     errBox.classList.remove("d-none");
+  }
+});
+
+document.getElementById("sendSmsBtn").onclick = openSendSmsModal;
+
+document.getElementById("sendSmsForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  const routerId = f.router.value;
+  const errBox = document.getElementById("sendSmsError");
+  errBox.classList.add("d-none");
+  try {
+    await api("/routers/" + encodeURIComponent(routerId) + "/sms/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: f.phone.value.trim(), message: f.message.value }),
+    });
+    sendSmsModal.hide();
+    toastSuccess("SMS enviado");
+    loadStats(); loadMessages();
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.classList.remove("d-none");
+    // el intento (exitoso o no) ya quedo registrado en el historial del router
+    loadStats(); loadMessages();
   }
 });
 

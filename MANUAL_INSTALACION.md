@@ -124,13 +124,15 @@ vez**, con los demas routers desconectados:
    "Configuraciones avanzadas" > "Ajustes del Router", con el campo
    **Direccion IP**).
 4. Si el campo aparece bloqueado con un aviso tipo "Las configuraciones
-   solo pueden ser cambiadas cuando el modem esta desconectado", busca en
-   esa misma pagina la opcion para **desconectar la conexion de datos
-   movil** (LTE) - normalmente en el panel superior, un boton o icono de
-   conectar/desconectar la red movil.
-   > **Cuidado:** en algunos modelos/firmwares hay un enlace que dice
-   > **"Apagar"** que en realidad **apaga el equipo por completo** (no solo
-   > la conexion LTE). Si lo tocas por error, el router se apaga: para
+   solo pueden ser cambiadas cuando el modem esta desconectado", vuelve a
+   la pantalla principal (flecha `<` junto al titulo, o el logo arriba a
+   la izquierda) y en el bloque **"Mi equipo"** apaga el switch
+   **"Datos"** (ON -> OFF). Eso corta solo la conexion de datos movil.
+   Vuelve luego a "Ajustes del Router" y el campo ya deberia estar
+   editable.
+   > **Cuidado:** el enlace **"Apagar"** (arriba a la derecha, junto a
+   > "Modificar contrasena") es distinto del switch "Datos": ese apaga el
+   > equipo por completo. Si lo tocas por error, el router se apaga: para
    > volver a encenderlo, desconecta el cable USB y vuelve a conectarlo -
    > va a reaparecer como unidad `ZTEMODEM`, asi que hay que repetir el
    > Paso 3 (`ResetCDROM.exe`) para volver a acceder a el.
@@ -140,6 +142,12 @@ vez**, con los demas routers desconectados:
    - Router 2 -> `192.168.2.1`
    - Router 3 -> `192.168.3.1`
    - (y asi sucesivamente)
+   Actualiza tambien el **Pool IP para el servidor DHCP** para que caiga
+   dentro de esa misma subred (por ejemplo, si la IP es `192.168.2.1`, el
+   pool debe ir de `192.168.2.100` a `192.168.2.200`) - si lo dejas con el
+   rango viejo (`192.168.0.x`), el DHCP queda apuntando a una subred que ya
+   no existe. Deja igual la **Mascara de Subred** (`255.255.255.0`) y el
+   resto de campos (MTU, MSS, etc).
 6. Guarda los cambios (boton "Aplicar"). El router se reinicia (1-2
    minutos).
 7. **Pega una etiqueta fisica en el router** con la IP que le asignaste - la

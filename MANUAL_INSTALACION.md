@@ -113,6 +113,16 @@ Todos los MF920V traen de fabrica la misma IP (`192.168.0.1`). Si conectas
 varios a la vez sin cambiar esto, van a chocar entre si. Hazlo de a **uno por
 vez**, con los demas routers desconectados:
 
+> **Antes de elegir las IPs:** corre `ipconfig` en Git Bash o PowerShell y
+> anota la subred de la red normal de la PC (LAN/Wifi de la oficina). Evita
+> esa subred al numerar los routers, porque si coincide, el navegador va a
+> resolver esa IP contra la red de la oficina en vez del router (por
+> ejemplo, entrar a otro equipo de la red, como una impresora, en lugar del
+> router). Rangos como `192.168.0.x`, `192.168.1.x` o `192.168.2.x` son muy
+> comunes en redes domesticas/de oficina, asi que si tu red usa alguno de
+> esos, prefiere un rango menos comun y dedicado solo a los routers, por
+> ejemplo `192.168.50.x`, `192.168.51.x`, etc.
+
 1. Con solo ese router conectado (repite el Paso 3 si es un equipo nuevo),
    abre el navegador y entra a `http://192.168.0.1`.
 2. Inicia sesion (usuario `admin`, password de la etiqueta del equipo o
@@ -136,15 +146,17 @@ vez**, con los demas routers desconectados:
    > volver a encenderlo, desconecta el cable USB y vuelve a conectarlo -
    > va a reaparecer como unidad `ZTEMODEM`, asi que hay que repetir el
    > Paso 3 (`ResetCDROM.exe`) para volver a acceder a el.
-5. Cambia el campo de **Direccion IP** de `192.168.0.1` a una IP unica.
-   Sugerencia de numeracion:
-   - Router 1 -> `192.168.1.1`
-   - Router 2 -> `192.168.2.1`
-   - Router 3 -> `192.168.3.1`
-   - (y asi sucesivamente)
+5. Cambia el campo de **Direccion IP** de `192.168.0.1` a una IP unica que
+   no choque con tu red normal (ver nota de arriba). Sugerencia de
+   numeracion:
+   - Router 1 -> `192.168.50.1`
+   - Router 2 -> `192.168.51.1`
+   - Router 3 -> `192.168.52.1`
+   - (y asi sucesivamente - ajusta el rango si tu red ya usa
+     `192.168.50.x` o similar)
    Actualiza tambien el **Pool IP para el servidor DHCP** para que caiga
-   dentro de esa misma subred (por ejemplo, si la IP es `192.168.2.1`, el
-   pool debe ir de `192.168.2.100` a `192.168.2.200`) - si lo dejas con el
+   dentro de esa misma subred (por ejemplo, si la IP es `192.168.51.1`, el
+   pool debe ir de `192.168.51.100` a `192.168.51.200`) - si lo dejas con el
    rango viejo (`192.168.0.x`), el DHCP queda apuntando a una subred que ya
    no existe. Deja igual la **Mascara de Subred** (`255.255.255.0`) y el
    resto de campos (MTU, MSS, etc).
@@ -154,6 +166,14 @@ vez**, con los demas routers desconectados:
    vas a necesitar en el Paso 7.
 8. Desconecta ese router, conecta el siguiente y repite desde el punto 1 con
    la IP que le corresponda.
+
+> **Si ya le pusiste una IP que choca con otro equipo de tu red** (por
+> ejemplo, al entrar a esa IP te aparece el login de otra cosa - una
+> impresora, otro router, etc. - en vez del router ZTE): desconecta
+> temporalmente el Wifi/cable de red de la PC dejando solo ese router
+> conectado por USB, entra de nuevo a esa misma IP (ahora si deberia ser el
+> router, sin competencia de la otra red), y repite el punto 5 con una IP
+> que no choque. Reconecta el Wifi/cable de red al terminar.
 
 ## Paso 5 - Conectar todos los routers a la vez
 

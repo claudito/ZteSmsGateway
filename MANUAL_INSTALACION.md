@@ -117,9 +117,10 @@ vez**, con los demas routers desconectados:
    abre el navegador y entra a `http://192.168.0.1`.
 2. Inicia sesion (usuario `admin`, password de la etiqueta del equipo o
    `admin` por defecto).
-3. Busca la seccion de configuracion de LAN (el menu exacto varia segun el
-   idioma del equipo: algo como "Configuracion de red" > "LAN", o
-   "Network Settings" > "LAN Settings").
+3. Dentro de esa misma pagina web del router (no es configuracion de
+   Windows/la PC), busca la seccion de configuracion de LAN del router
+   (el menu exacto varia segun el idioma del equipo: algo como
+   "Configuracion de red" > "LAN", o "Network Settings" > "LAN Settings").
 4. Cambia el campo de **Direccion IP** de `192.168.0.1` a una IP unica.
    Sugerencia de numeracion:
    - Router 1 -> `192.168.1.1`

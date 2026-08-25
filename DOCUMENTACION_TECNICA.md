@@ -222,6 +222,34 @@ Con IPs distintas, cada router aparece como una interfaz de red separada sin
 conflicto de subred, y cada uno necesita tambien el ajuste de metrica de la
 seccion 5 (uno por interfaz).
 
+**Actualizacion (sesion 2026-08-25) — esto NO alcanza para tener 2+ routers
+por USB simultaneos en la misma PC:** se investigo a fondo por que, incluso
+con IPs distintas dentro del mismo `/24`, solo un router respondia a la vez
+al conectar dos juntos. Con `Get-NetAdapter` se confirmo que **ambos
+adaptadores RNDIS reportan el mismo MAC address de fabrica**
+(`36-4B-50-B7-EF-DA` en las dos unidades probadas) — es un problema de capa
+2 (Ethernet), no de IP, asi que ni cambiar la mascara de subred ni usar IPs
+distintas lo resuelve.
+
+Se intento forzar un MAC distinto via `Set-NetAdapterAdvancedProperty
+-RegistryKeyword "NetworkAddress"` (la propiedad existe, se llama
+"Direccion de red" en espanol) pero **el driver generico de Windows para
+"Remote NDIS based Internet Sharing Device" lo ignora** — el MAC se sigue
+leyendo directo del dispositivo, no hay override real.
+
+Tambien se descarto la salida de mandarle un comando AT (`AT+ZCDRUN=8`) para
+desactivar el modo CD-ROM de fabrica de forma permanente: este modelo/
+firmware **no expone ningun puerto COM/AT por USB**, solo dos funciones
+compuestas (almacenamiento + red) — se confirmo con
+`Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match "VID_19D2" }`,
+que solo devuelve `Dispositivo de almacenamiento USB` y
+`Remote NDIS based Internet Sharing Device`, nada de clase `Modem`/`Ports`.
+
+**Conclusion:** con el MF920V, 2+ routers por USB a la vez en la misma PC no
+es viable por software. Las alternativas que si funcionan (WiFi + USB
+mixto, o una VM con USB passthrough por router) estan documentadas en
+[GUIA_VM_ROUTERS_USB.md](GUIA_VM_ROUTERS_USB.md).
+
 ## 7. Dashboard y base de datos
 
 Un solo proceso de la API sirve **todos** los routers configurados, y guarda

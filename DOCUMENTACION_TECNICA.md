@@ -210,8 +210,11 @@ valor distinto, conectando **un router a la vez**:
    `admin` por defecto).
 3. Ir a la seccion de configuracion de LAN (nombre exacto varia segun idioma
    del firmware: "Network Settings" / "LAN Settings" / "Configuracion LAN").
-4. Cambiar la "Direccion IP" del router (ej. router 1 -> `192.168.1.1`,
-   router 2 -> `192.168.2.1`, etc.) y guardar. El router se reinicia.
+4. Cambiar la "Direccion IP" del router al valor que le corresponda dentro
+   del rango asignado por el area de redes (`192.168.28.0/24`, VLAN-WIFI;
+   se evita `192.168.28.1` porque ya es el gateway de esa VLAN): router 1
+   -> `192.168.28.2`, router 2 -> `192.168.28.3`, etc. Guardar. El router se
+   reinicia.
 5. Etiquetar fisicamente el equipo con la IP asignada.
 6. Repetir con el siguiente router.
 

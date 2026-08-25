@@ -113,15 +113,13 @@ Todos los MF920V traen de fabrica la misma IP (`192.168.0.1`). Si conectas
 varios a la vez sin cambiar esto, van a chocar entre si. Hazlo de a **uno por
 vez**, con los demas routers desconectados:
 
-> **Antes de elegir las IPs:** corre `ipconfig` en Git Bash o PowerShell y
-> anota la subred de la red normal de la PC (LAN/Wifi de la oficina). Evita
-> esa subred al numerar los routers, porque si coincide, el navegador va a
-> resolver esa IP contra la red de la oficina en vez del router (por
-> ejemplo, entrar a otro equipo de la red, como una impresora, en lugar del
-> router). Rangos como `192.168.0.x`, `192.168.1.x` o `192.168.2.x` son muy
-> comunes en redes domesticas/de oficina, asi que si tu red usa alguno de
-> esos, prefiere un rango menos comun y dedicado solo a los routers, por
-> ejemplo `192.168.50.x`, `192.168.51.x`, etc.
+> **Rango de IPs a usar:** el area de redes de DIRIS Lima Este asigno el
+> rango `192.168.28.0/24` (VLAN-WIFI) para numerar estos routers. No uses
+> `192.168.28.1` porque esa IP ya esta tomada como gateway de esa VLAN en la
+> red real - empieza en `192.168.28.2`. Este rango no coincide con las
+> subredes domesticas/de oficina mas comunes (`192.168.0.x`, `192.168.1.x`,
+> `192.168.2.x`), asi que no deberia chocar con la red normal de la PC -
+> igual puedes confirmarlo con `ipconfig` en Git Bash o PowerShell.
 
 1. Con solo ese router conectado (repite el Paso 3 si es un equipo nuevo),
    abre el navegador y entra a `http://192.168.0.1`.
@@ -146,17 +144,16 @@ vez**, con los demas routers desconectados:
    > volver a encenderlo, desconecta el cable USB y vuelve a conectarlo -
    > va a reaparecer como unidad `ZTEMODEM`, asi que hay que repetir el
    > Paso 3 (`ResetCDROM.exe`) para volver a acceder a el.
-5. Cambia el campo de **Direccion IP** de `192.168.0.1` a una IP unica que
-   no choque con tu red normal (ver nota de arriba). Sugerencia de
-   numeracion:
-   - Router 1 -> `192.168.50.1`
-   - Router 2 -> `192.168.51.1`
-   - Router 3 -> `192.168.52.1`
-   - (y asi sucesivamente - ajusta el rango si tu red ya usa
-     `192.168.50.x` o similar)
+5. Cambia el campo de **Direccion IP** de `192.168.0.1` a la IP que le toca
+   dentro del rango asignado (`192.168.28.0/24`, ver nota de arriba).
+   Numeracion:
+   - Router 1 -> `192.168.28.2`
+   - Router 2 -> `192.168.28.3`
+   - Router 3 -> `192.168.28.4`
+   - (y asi sucesivamente)
    Actualiza tambien el **Pool IP para el servidor DHCP** para que caiga
-   dentro de esa misma subred (por ejemplo, si la IP es `192.168.51.1`, el
-   pool debe ir de `192.168.51.100` a `192.168.51.200`) - si lo dejas con el
+   dentro de esa misma subred (por ejemplo, si la IP es `192.168.28.3`, el
+   pool debe ir de `192.168.28.100` a `192.168.28.200`) - si lo dejas con el
    rango viejo (`192.168.0.x`), el DHCP queda apuntando a una subred que ya
    no existe. Deja igual la **Mascara de Subred** (`255.255.255.0`) y el
    resto de campos (MTU, MSS, etc).
@@ -206,8 +203,8 @@ Windows pide confirmar con un clic:
 4. Verifica que sigues teniendo internet/intranet normal, y que llegas a
    cada router por su IP:
    ```powershell
-   curl http://192.168.1.1/
-   curl http://192.168.2.1/
+   curl http://192.168.28.2/
+   curl http://192.168.28.3/
    ```
 
 ## Paso 7 - Abrir el firewall (requiere Administrador)
@@ -292,7 +289,7 @@ Corre esto para ver, paso a paso, en que falla la comunicacion con un router
 en particular (cambia el numero, password e IP segun corresponda):
 
 ```bash
-python diagnostico.py +51987654321 admin 192.168.1.1
+python diagnostico.py +51987654321 admin 192.168.28.2
 ```
 
 El mensaje de error, si lo hay, indica exactamente en que paso se rompio

@@ -1,0 +1,405 @@
+<title>Arquitectura Gateway SMS</title>
+<meta name="description" content="Diagrama de red del Gateway SMS DIRIS Lima Este y solicitud de segmentacion (VLAN) para el area de Redes.">
+
+<style>
+  :root {
+    --bg: #F3F6F6;
+    --surface: #FFFFFF;
+    --surface-2: #E8EDED;
+    --text: #16212A;
+    --text-dim: #51636B;
+    --text-faint: #7C8B92;
+    --border: #C7D3D5;
+    --accent: #0E7C86;
+    --accent-soft: #DCEFEF;
+    --accent-2: #A85A22;
+    --accent-2-soft: #F3E4D4;
+    --code-bg: #EAF1F1;
+    --shadow: 0 1px 2px rgba(20, 40, 45, 0.06), 0 8px 24px rgba(20, 40, 45, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10171A;
+      --surface: #172023;
+      --surface-2: #1D2A2D;
+      --text: #E8EEEF;
+      --text-dim: #A6B6BA;
+      --text-faint: #7A8B90;
+      --border: #33474C;
+      --accent: #57CBD1;
+      --accent-soft: #1C3538;
+      --accent-2: #E2A167;
+      --accent-2-soft: #3A2C1D;
+      --code-bg: #1B2528;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10171A;
+    --surface: #172023;
+    --surface-2: #1D2A2D;
+    --text: #E8EEEF;
+    --text-dim: #A6B6BA;
+    --text-faint: #7A8B90;
+    --border: #33474C;
+    --accent: #57CBD1;
+    --accent-soft: #1C3538;
+    --accent-2: #E2A167;
+    --accent-2-soft: #3A2C1D;
+    --code-bg: #1B2528;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  header.doc-head {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .doc-head p {
+    margin: 4px 0 0;
+    max-width: 62ch;
+    color: var(--text-dim);
+    font-size: 15.5px;
+  }
+
+  section.context p {
+    max-width: 68ch;
+    font-size: 15.5px;
+    color: var(--text);
+  }
+
+  section.context p + p { margin-top: 12px; }
+
+  figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .diagram-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 4px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+
+  svg.diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-width: 640px;
+  }
+
+  svg.diagram text {
+    font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+    fill: var(--text);
+  }
+
+  svg.diagram text.mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  svg.diagram .dim { fill: var(--text-dim); }
+  svg.diagram .faint { fill: var(--text-faint); }
+  svg.diagram .line { stroke: var(--text-dim); }
+  svg.diagram .box { fill: var(--surface); stroke: var(--border); }
+  svg.diagram .box2 { fill: var(--surface-2); stroke: var(--border); }
+
+  .legend {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    padding: 0 6px;
+  }
+
+  .legend .swatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .legend .swatch svg { flex: none; }
+
+  figcaption {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    max-width: 68ch;
+    padding: 0 6px;
+  }
+
+  section.request h2 {
+    font-size: 19px;
+    font-weight: 650;
+    margin: 0 0 4px;
+  }
+
+  section.request > p.lead {
+    margin: 0 0 18px;
+    color: var(--text-dim);
+    font-size: 14px;
+    max-width: 66ch;
+  }
+
+  .spec-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--border);
+  }
+
+  .spec-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spec-row.out-of-scope { background: none; }
+
+  .spec-label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+
+  .spec-row.out-of-scope .spec-label { color: var(--accent-2); }
+
+  .spec-body p {
+    margin: 0;
+    font-size: 14.5px;
+  }
+
+  .spec-body code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    background: var(--code-bg);
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .spec-body .note {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  footer.doc-foot {
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  footer.doc-foot code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  @media (max-width: 560px) {
+    .spec-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;650;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<div class="page">
+
+  <header class="doc-head">
+    <span class="eyebrow">DIRIS Lima Este &middot; Solicitud a &Aacute;rea de Redes</span>
+    <h1>Arquitectura Gateway SMS</h1>
+    <p>Diagrama de red de la bandeja de notificaciones SMS y el segmento que se necesita para alojar el equipo que la corre.</p>
+  </header>
+
+  <section class="context">
+    <p>La bandeja de notificaciones SMS corre en una PC Windows que expone una <strong>API HTTP</strong> (FastAPI, puerto <code>8000</code>) hacia la red interna. Esa misma PC controla por <strong>USB</strong> uno o varios routers celulares ZTE MF920V, que son los que realmente envían el SMS a través de la red celular (con SIM propia cada uno).</p>
+    <p>Lo que necesitamos de Redes es un segmento (VLAN) para esa PC, con IP fija y el puerto 8000 alcanzable desde los sistemas que van a consumir la API. Las subredes que usan los routers por USB son privadas a esa PC y no requieren ningún cambio de red — se detallan en el diagrama solo para que quede claro que no son parte del pedido.</p>
+  </section>
+
+  <figure>
+    <div class="diagram-frame">
+      <svg class="diagram" viewBox="0 0 1040 620" role="img" aria-label="Los sistemas internos llaman por HTTP al puerto 8000 de la PC gateway, que vive en la VLAN solicitada. Esa PC controla por USB, en subredes privadas propias, a varios routers ZTE que envían los SMS por la red celular.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--text-dim)"></path>
+          </marker>
+        </defs>
+
+        <!-- Client systems -->
+        <rect class="box" x="34" y="256" width="188" height="108" rx="6"></rect>
+        <text x="128" y="292" text-anchor="middle" font-size="13.5" font-weight="650">Sistemas internos</text>
+        <text x="128" y="312" text-anchor="middle" font-size="11.5" class="dim">red corporativa</text>
+        <text x="128" y="332" text-anchor="middle" font-size="11" class="faint">(app que envía la</text>
+        <text x="128" y="346" text-anchor="middle" font-size="11" class="faint">notificación por SMS)</text>
+
+        <!-- arrow client -> VLAN -->
+        <line class="line" x1="222" y1="310" x2="322" y2="310" stroke-width="1.5" marker-end="url(#arrow)"></line>
+        <text x="272" y="296" text-anchor="middle" font-size="11" class="dim">POST /sms/send</text>
+        <text x="272" y="324" text-anchor="middle" font-size="10.5" class="mono faint">X-API-Key · TCP 8000</text>
+
+        <!-- VLAN boundary -->
+        <rect x="330" y="188" width="244" height="266" rx="8" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="7 5"></rect>
+        <text x="350" y="212" font-size="14.5" font-weight="650" fill="var(--accent)">VLAN solicitada</text>
+        <text x="350" y="230" font-size="11" class="dim">segmento dedicado · IP fija</text>
+
+        <rect class="box" x="352" y="252" width="200" height="172" rx="6"></rect>
+        <text x="452" y="282" text-anchor="middle" font-size="13.5" font-weight="650">PC Windows</text>
+        <text x="452" y="302" text-anchor="middle" font-size="12" class="dim">API FastAPI (uvicorn)</text>
+        <text x="452" y="326" text-anchor="middle" font-size="13" class="mono" fill="var(--accent)">0.0.0.0 : 8000</text>
+        <line x1="372" y1="340" x2="532" y2="340" class="line" stroke-width="1"></line>
+        <text x="452" y="360" text-anchor="middle" font-size="10.5" class="dim">firewall local: TCP 8000</text>
+        <text x="452" y="376" text-anchor="middle" font-size="10" class="faint">permitido (netsh advfirewall)</text>
+        <text x="452" y="402" text-anchor="middle" font-size="10" class="faint">SQLite local · sms_gateway.db</text>
+
+        <!-- USB zone -->
+        <rect x="650" y="40" width="284" height="556" rx="8" fill="none" stroke="var(--accent-2)" stroke-width="1.6" stroke-dasharray="7 5"></rect>
+        <text x="670" y="66" font-size="14.5" font-weight="650" fill="var(--accent-2)">Subredes privadas (USB)</text>
+        <text x="670" y="84" font-size="11" class="dim">otro segmento, para no chocar</text>
+        <text x="670" y="99" font-size="11" class="dim">con la red corporativa</text>
+
+        <!-- PC -> routers fan-out -->
+        <line class="line" x1="552" y1="330" x2="672" y2="165" stroke-width="1.3" marker-end="url(#arrow)"></line>
+        <line class="line" x1="552" y1="330" x2="672" y2="325" stroke-width="1.3" marker-end="url(#arrow)"></line>
+        <line class="line" x1="552" y1="330" x2="672" y2="485" stroke-width="1.3" marker-end="url(#arrow)"></line>
+        <text x="606" y="222" text-anchor="middle" font-size="10.5" class="dim">USB (RNDIS)</text>
+        <text x="606" y="236" text-anchor="middle" font-size="9.5" class="faint">IP distinta por router</text>
+
+        <!-- Router boxes -->
+        <rect class="box2" x="678" y="112" width="230" height="106" rx="6"></rect>
+        <text x="793" y="142" text-anchor="middle" font-size="13" font-weight="650">ZTE MF920V #1</text>
+        <text x="793" y="162" text-anchor="middle" font-size="12" class="mono dim">192.168.50.1/24</text>
+        <text x="793" y="182" text-anchor="middle" font-size="10.5" class="faint">SIM propia</text>
+
+        <rect class="box2" x="678" y="272" width="230" height="106" rx="6"></rect>
+        <text x="793" y="302" text-anchor="middle" font-size="13" font-weight="650">ZTE MF920V #2</text>
+        <text x="793" y="322" text-anchor="middle" font-size="12" class="mono dim">192.168.51.1/24</text>
+        <text x="793" y="342" text-anchor="middle" font-size="10.5" class="faint">SIM propia</text>
+
+        <rect class="box2" x="678" y="432" width="230" height="106" rx="6"></rect>
+        <text x="793" y="462" text-anchor="middle" font-size="13" font-weight="650">ZTE MF920V #N</text>
+        <text x="793" y="482" text-anchor="middle" font-size="12" class="mono dim">192.168.5N.1/24</text>
+        <text x="793" y="502" text-anchor="middle" font-size="10.5" class="faint">SIM propia</text>
+
+        <!-- Routers -> cellular network -->
+        <line class="line" x1="908" y1="165" x2="978" y2="270" stroke-width="1.3" marker-end="url(#arrow)"></line>
+        <line class="line" x1="908" y1="325" x2="978" y2="300" stroke-width="1.3" marker-end="url(#arrow)"></line>
+        <line class="line" x1="908" y1="485" x2="978" y2="330" stroke-width="1.3" marker-end="url(#arrow)"></line>
+        <text x="948" y="245" text-anchor="middle" font-size="10.5" class="dim">SMS</text>
+
+        <text x="985" y="295" text-anchor="start" font-size="12.5" font-weight="650">Red</text>
+        <text x="985" y="312" text-anchor="start" font-size="12.5" font-weight="650">celular</text>
+        <text x="985" y="330" text-anchor="start" font-size="10" class="faint">(SIM por</text>
+        <text x="985" y="343" text-anchor="start" font-size="10" class="faint">router)</text>
+      </svg>
+    </div>
+
+    <div class="legend">
+      <span class="swatch">
+        <svg width="22" height="10" aria-hidden="true"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"></line></svg>
+        segmento pedido a Redes
+      </span>
+      <span class="swatch">
+        <svg width="22" height="10" aria-hidden="true"><line x1="0" y1="5" x2="22" y2="5" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="5 4"></line></svg>
+        privado a la PC, sin pedido
+      </span>
+    </div>
+
+    <figcaption>La PC hace de puente entre la red corporativa y la red celular: hacia la izquierda expone HTTP con IP fija en la VLAN que se pide; hacia la derecha reparte, por USB, otro segmento propio a cada router para que no choque con la LAN — eso último ya funciona hoy y no depende del área de Redes.</figcaption>
+  </figure>
+
+  <section class="request">
+    <h2>Solicitud a Redes</h2>
+    <p class="lead">Cuatro puntos concretos para dimensionar el segmento — el resto del diagrama es contexto.</p>
+
+    <div class="spec-list">
+      <div class="spec-row">
+        <div class="spec-label">Segmento</div>
+        <div class="spec-body">
+          <p>VLAN dedicada para el host de la PC gateway, con <strong>IP fija</strong> (hoy la asigna DHCP genérico, lo que puede cambiarla).</p>
+        </div>
+      </div>
+
+      <div class="spec-row">
+        <div class="spec-label">Puerto</div>
+        <div class="spec-body">
+          <p><code>TCP 8000</code> entrante hacia esa PC, desde los sistemas internos que van a llamar a la API (a confirmar el listado exacto de origen con el equipo del gateway).</p>
+        </div>
+      </div>
+
+      <div class="spec-row">
+        <div class="spec-label">Protocolo</div>
+        <div class="spec-body">
+          <p>HTTP plano, sin TLS por ahora.</p>
+          <span class="note">Mantener el tráfico dentro de la red interna — no exponer este puerto a internet.</span>
+        </div>
+      </div>
+
+      <div class="spec-row out-of-scope">
+        <div class="spec-label">Fuera de alcance</div>
+        <div class="spec-body">
+          <p>Los routers ZTE usan <strong>otro segmento</strong> (privado, vía adaptador USB/RNDIS) — <code>192.168.50.0/24</code>, <code>192.168.51.0/24</code>, etc., uno por router — precisamente para no chocar con la red corporativa.</p>
+          <span class="note">No hace falta crear nada para ellas del lado de Redes.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-foot">
+    <span>Basado en <code>MANUAL_INSTALACION.md</code> / <code>DOCUMENTACION_TECNICA.md</code> del proyecto.</span>
+    <span>Bandeja de notificaciones SMS &middot; DIRIS Lima Este</span>
+  </footer>
+
+</div>

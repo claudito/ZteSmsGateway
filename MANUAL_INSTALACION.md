@@ -119,18 +119,32 @@ vez**, con los demas routers desconectados:
    `admin` por defecto).
 3. Dentro de esa misma pagina web del router (no es configuracion de
    Windows/la PC), busca la seccion de configuracion de LAN del router
-   (el menu exacto varia segun el idioma del equipo: algo como
-   "Configuracion de red" > "LAN", o "Network Settings" > "LAN Settings").
-4. Cambia el campo de **Direccion IP** de `192.168.0.1` a una IP unica.
+   (el menu exacto varia segun el modelo/idioma del equipo: algo como
+   "Configuracion de red" > "LAN", "Network Settings" > "LAN Settings", o
+   "Configuraciones avanzadas" > "Ajustes del Router", con el campo
+   **Direccion IP**).
+4. Si el campo aparece bloqueado con un aviso tipo "Las configuraciones
+   solo pueden ser cambiadas cuando el modem esta desconectado", busca en
+   esa misma pagina la opcion para **desconectar la conexion de datos
+   movil** (LTE) - normalmente en el panel superior, un boton o icono de
+   conectar/desconectar la red movil.
+   > **Cuidado:** en algunos modelos/firmwares hay un enlace que dice
+   > **"Apagar"** que en realidad **apaga el equipo por completo** (no solo
+   > la conexion LTE). Si lo tocas por error, el router se apaga: para
+   > volver a encenderlo, desconecta el cable USB y vuelve a conectarlo -
+   > va a reaparecer como unidad `ZTEMODEM`, asi que hay que repetir el
+   > Paso 3 (`ResetCDROM.exe`) para volver a acceder a el.
+5. Cambia el campo de **Direccion IP** de `192.168.0.1` a una IP unica.
    Sugerencia de numeracion:
    - Router 1 -> `192.168.1.1`
    - Router 2 -> `192.168.2.1`
    - Router 3 -> `192.168.3.1`
    - (y asi sucesivamente)
-5. Guarda los cambios. El router se reinicia (1-2 minutos).
-6. **Pega una etiqueta fisica en el router** con la IP que le asignaste - la
+6. Guarda los cambios (boton "Aplicar"). El router se reinicia (1-2
+   minutos).
+7. **Pega una etiqueta fisica en el router** con la IP que le asignaste - la
    vas a necesitar en el Paso 7.
-7. Desconecta ese router, conecta el siguiente y repite desde el punto 1 con
+8. Desconecta ese router, conecta el siguiente y repite desde el punto 1 con
    la IP que le corresponda.
 
 ## Paso 5 - Conectar todos los routers a la vez

@@ -172,9 +172,18 @@ Windows pide confirmar con un clic:
    ```powershell
    Get-NetAdapter | Where-Object { $_.InterfaceDescription -match "RNDIS" } | Select-Object Name
    ```
-3. Con el nombre que te devuelva (cambia `"Ethernet X"` por el real):
+   > **Si este comando no devuelve nada** (pantalla vacia, sin tabla ni
+   > nombre): el router todavia no esta en modo red. Revisa si aparece una
+   > unidad `ZTEMODEM` en "Este equipo" y corre `ResetCDROM.exe` desde ahi
+   > (ver Paso 3), espera 10 segundos, y vuelve a correr este comando antes
+   > de seguir al punto 3.
+3. Ese comando te va a devolver un nombre real — lo mas comun es
+   `Ethernet 2` (la PC ya suele tener "Ethernet" como su adaptador
+   principal, asi que el del router entra como el siguiente numero), pero
+   puede variar. Usa el nombre exacto que te devolvio el punto anterior,
+   no lo copies literal si sale distinto:
    ```powershell
-   Set-NetIPInterface -InterfaceAlias "Ethernet X" -InterfaceMetric 6000
+   Set-NetIPInterface -InterfaceAlias "Ethernet 2" -InterfaceMetric 6000
    ```
 4. Verifica que sigues teniendo internet/intranet normal, y que llegas al
    router por su IP:

@@ -63,7 +63,18 @@ termux-sms-send -n +51987654321 "Prueba desde Termux"
 Si no habias abierto Termux:API antes, puede pedir el permiso de SMS en ese
 momento — acepta. Si el SMS llega, todo esta listo para automatizarlo.
 
-## Paso 6 - Crear el servidor HTTP local
+## Paso 6 - Averiguar la IP del celular
+
+En otra sesion de Termux (desliza desde el borde izquierdo → "New session"),
+o en Ajustes de Android → WiFi → toca la red conectada → IP:
+
+```bash
+ifconfig wlan0
+```
+
+Anota la IP (ej. `192.168.28.50`) — la vas a necesitar en el Paso 10.
+
+## Paso 7 - Crear el servidor HTTP local
 
 Crea el archivo del servidor:
 
@@ -119,7 +130,7 @@ HTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
 
 Cambia `API_KEY` por una clave propia antes de guardar.
 
-## Paso 7 - Evitar que Android mate el proceso
+## Paso 8 - Evitar que Android mate el proceso
 
 Antes de arrancar el servidor, evita que Android suspenda Termux en segundo
 plano:
@@ -128,7 +139,7 @@ plano:
 termux-wake-lock
 ```
 
-## Paso 8 - Arrancar el servidor
+## Paso 9 - Arrancar el servidor
 
 ```bash
 python servidor_sms.py
@@ -136,17 +147,6 @@ python servidor_sms.py
 
 Debe quedar corriendo sin salir de la terminal (minimiza la app, no la
 cierres).
-
-## Paso 9 - Averiguar la IP del celular
-
-En otra sesion de Termux (desliza desde el borde izquierdo → "New session"),
-o en Ajustes de Android → WiFi → toca la red conectada → IP:
-
-```bash
-ifconfig wlan0
-```
-
-Anota la IP (ej. `192.168.28.50`).
 
 ## Paso 10 - Probar desde otra PC en la misma WiFi
 
@@ -164,7 +164,7 @@ Respuesta esperada: `{"status": "sent", "phone": "+51987654321", "detail": ""}`.
 - Reservar la IP del celular en el router WiFi (DHCP fijo por MAC) evita que
   cambie y rompa la integracion — revisa el panel de administracion de esa
   red WiFi.
-- Si el celular se reinicia o cierra Termux, hay que repetir los Pasos 7 y 8
+- Si el celular se reinicia o cierra Termux, hay que repetir los Pasos 8 y 9
   a mano (Termux no arranca solo con Android por defecto).
 - Este servidor es standalone, separado del proyecto principal
   (`ZteSmsGateway`). Si despues quieres que el dashboard central tambien

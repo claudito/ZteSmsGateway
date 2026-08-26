@@ -39,6 +39,21 @@ pkg update && pkg upgrade -y
 pkg install -y termux-api python
 ```
 
+> **Si `pkg update` falla con errores tipo "Failed to fetch ... Unable to
+> connect to mirrors.XXXXX.in":** el mirror que te asigno por defecto esta
+> caido. Cambialo con:
+> ```bash
+> termux-change-repo
+> ```
+> Elige otro de la lista (con las flechas, Enter para confirmar — prueba
+> con el que diga "Main repository (CDN, recommended)" o similar), y vuelve
+> a correr `pkg update && pkg upgrade -y`.
+>
+> Durante el `upgrade`, si aparece un prompt tipo
+> `*** sources.list (Y/I/N/O/D/Z) [default=N] ?` (pregunta que hacer con un
+> archivo de configuracion que cambio), escribe **`Y`** y Enter — es
+> esperado, corresponde al cambio de mirror que acabas de hacer.
+
 ## Paso 5 - Probar el envio de SMS por linea de comandos
 
 ```bash

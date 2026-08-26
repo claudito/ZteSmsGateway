@@ -1,9 +1,14 @@
 # Manual de Instalacion - Bandeja de Notificaciones SMS DIRIS Lima Este (PC nueva, desde cero)
 
 Guia paso a paso para instalar este SMS Gateway en una PC que **no tiene
-Python, ni VSCode, ni ninguna herramienta de desarrollo instalada**, y que
-va a manejar **uno o varios routers ZTE MF920V** conectados por USB al mismo
-tiempo.
+Python, ni VSCode, ni ninguna herramienta de desarrollo instalada**, con
+**un router ZTE MF920V** conectado por USB.
+
+> Si necesitas mas de un router, cada uno va en su **propia PC** — no se
+> pueden conectar 2+ routers ZTE por USB a la misma PC (limitacion de
+> hardware, ver seccion 6 de
+> [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md)). Repite esta guia
+> completa en cada PC.
 
 Si algo falla en el camino y quieres entender el porque tecnico, revisa
 [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md).
@@ -12,13 +17,13 @@ Si algo falla en el camino y quieres entender el porque tecnico, revisa
 
 - La carpeta completa de este proyecto (copiarla a la PC nueva, por ejemplo
   por USB).
-- El o los routers ZTE MF920V, cada uno con su cable USB.
+- El router ZTE MF920V con su cable USB.
 - Acceso a una cuenta de Windows con permisos de **Administrador** (o alguien
   que pueda hacer dos pasos puntuales por ti) - se explica exactamente donde
   hace falta.
 
 Todos los comandos de esta guia estan escritos para **Git Bash** (la
-terminal que instala Git para Windows). Los pasos 6 y 7 son la unica
+terminal que instala Git para Windows). Los pasos 5 y 6 son la unica
 excepcion: usan comandos de red que solo existen en PowerShell.
 
 ---
@@ -101,28 +106,34 @@ para que tome el cambio.
 > a modo CD-ROM (por ejemplo si se desconecto el cable USB un momento, o la
 > PC se suspendio). Repite el punto 3-5 de este paso: buscar la unidad
 > `ZTEMODEM` en "Este equipo" y volver a correr `ResetCDROM.exe`. La
-> metrica de red que configuras en el Paso 6 normalmente se mantiene sola
+> metrica de red que configuras en el Paso 5 normalmente se mantiene sola
 > despues de reconectar, no hace falta repetirla — pero si despues de
 > reconectar perdes internet/intranet de nuevo, si hay que repetirla.
 
-> Si vas a usar **un solo router**, salta directo al **Paso 6**.
+> **Cada PC solo maneja UN router.** Los MF920V no pueden convivir 2+ por
+> USB en la misma PC (limitacion de hardware — mismo MAC de fabrica en
+> todas las unidades, ver seccion 6 de
+> [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md)). Si necesitas mas
+> de un router, repite esta guia completa en otra PC, una maquina por
+> router — no lo intentes en la misma.
 
-## Paso 4 - Si vas a usar VARIOS routers: asignar una IP distinta a cada uno
+## Paso 4 - Asignar la IP fija al router
 
-Todos los MF920V traen de fabrica la misma IP (`192.168.0.1`). Si conectas
-varios a la vez sin cambiar esto, van a chocar entre si. Hazlo de a **uno por
-vez**, con los demas routers desconectados:
+Todos los MF920V traen de fabrica la misma IP (`192.168.0.1`). Vamos a
+cambiarla por una IP fija dentro del rango asignado:
 
 > **Rango de IPs a usar:** el area de redes de DIRIS Lima Este asigno el
 > rango `192.168.28.0/24` (VLAN-WIFI) para numerar estos routers. No uses
 > `192.168.28.1` porque esa IP ya esta tomada como gateway de esa VLAN en la
-> red real - empieza en `192.168.28.2`. Este rango no coincide con las
-> subredes domesticas/de oficina mas comunes (`192.168.0.x`, `192.168.1.x`,
-> `192.168.2.x`), asi que no deberia chocar con la red normal de la PC -
-> igual puedes confirmarlo con `ipconfig` en Git Bash o PowerShell.
+> red real - usa `192.168.28.2` para el router de esta PC (si en otra PC ya
+> usaste esa IP, usa la siguiente libre: `192.168.28.3`, `192.168.28.4`,
+> etc. — cada PC es independiente, no hace falta que coincidan). Este rango
+> no coincide con las subredes domesticas/de oficina mas comunes
+> (`192.168.0.x`, `192.168.1.x`, `192.168.2.x`), asi que no deberia chocar
+> con la red normal de la PC - igual puedes confirmarlo con `ipconfig` en
+> Git Bash o PowerShell.
 
-1. Con solo ese router conectado (repite el Paso 3 si es un equipo nuevo),
-   abre el navegador y entra a `http://192.168.0.1`.
+1. Abre el navegador y entra a `http://192.168.0.1`.
 2. Inicia sesion (usuario `admin`, password de la etiqueta del equipo o
    `admin` por defecto).
 3. Dentro de esa misma pagina web del router (no es configuracion de
@@ -145,41 +156,27 @@ vez**, con los demas routers desconectados:
    > va a reaparecer como unidad `ZTEMODEM`, asi que hay que repetir el
    > Paso 3 (`ResetCDROM.exe`) para volver a acceder a el.
 5. Cambia el campo de **Direccion IP** de `192.168.0.1` a la IP que le toca
-   dentro del rango asignado (`192.168.28.0/24`, ver nota de arriba).
-   Numeracion:
-   - Router 1 -> `192.168.28.2`
-   - Router 2 -> `192.168.28.3`
-   - Router 3 -> `192.168.28.4`
-   - (y asi sucesivamente)
-   Actualiza tambien el **Pool IP para el servidor DHCP** para que caiga
-   dentro de esa misma subred (por ejemplo, si la IP es `192.168.28.3`, el
-   pool debe ir de `192.168.28.100` a `192.168.28.200`) - si lo dejas con el
-   rango viejo (`192.168.0.x`), el DHCP queda apuntando a una subred que ya
-   no existe. Deja igual la **Mascara de Subred** (`255.255.255.0`) y el
-   resto de campos (MTU, MSS, etc).
+   dentro del rango asignado (`192.168.28.0/24`, ver nota de arriba, ej.
+   `192.168.28.2`). Actualiza tambien el **Pool IP para el servidor DHCP**
+   para que caiga dentro de esa misma subred (por ejemplo, si la IP es
+   `192.168.28.2`, el pool debe ir de `192.168.28.100` a `192.168.28.200`)
+   - si lo dejas con el rango viejo (`192.168.0.x`), el DHCP queda
+   apuntando a una subred que ya no existe. Deja igual la **Mascara de
+   Subred** (`255.255.255.0`) y el resto de campos (MTU, MSS, etc).
 6. Guarda los cambios (boton "Aplicar"). El router se reinicia (1-2
    minutos).
 7. **Pega una etiqueta fisica en el router** con la IP que le asignaste - la
-   vas a necesitar en el Paso 7.
-8. Desconecta ese router, conecta el siguiente y repite desde el punto 1 con
-   la IP que le corresponda.
+   vas a necesitar mas adelante.
 
-> **Si ya le pusiste una IP que choca con otro equipo de tu red** (por
-> ejemplo, al entrar a esa IP te aparece el login de otra cosa - una
-> impresora, otro router, etc. - en vez del router ZTE): desconecta
-> temporalmente el Wifi/cable de red de la PC dejando solo ese router
-> conectado por USB, entra de nuevo a esa misma IP (ahora si deberia ser el
-> router, sin competencia de la otra red), y repite el punto 5 con una IP
-> que no choque. Reconecta el Wifi/cable de red al terminar.
+> **Si esa IP choca con otro equipo de tu red** (por ejemplo, al entrar a
+> esa IP te aparece el login de otra cosa - una impresora, otro router,
+> etc. - en vez del router ZTE): desconecta temporalmente el Wifi/cable de
+> red de la PC dejando solo el router conectado por USB, entra de nuevo a
+> esa misma IP (ahora si deberia ser el router, sin competencia de la otra
+> red), y repite el punto 5 con una IP que no choque. Reconecta el
+> Wifi/cable de red al terminar.
 
-## Paso 5 - Conectar todos los routers a la vez
-
-Con cada router ya en su propia IP, puedes conectarlos todos por USB al
-mismo tiempo. La primera vez que cada uno se conecta a **esta** PC, hay que
-repetir el Paso 3.2-3.3 (`ResetCDROM.exe`) para ese router - despues de
-eso queda "recordado" mientras uses ese mismo puerto/router.
-
-## Paso 6 - Arreglar el conflicto de ruta de red (requiere Administrador + PowerShell)
+## Paso 5 - Arreglar el conflicto de ruta de red (requiere Administrador + PowerShell)
 
 Al conectarse, los routers intentan volverse la puerta de enlace principal
 de internet de la PC, lo que puede hacerte perder acceso a internet o a la
@@ -191,33 +188,29 @@ Windows pide confirmar con un clic:
 
 1. Busca "PowerShell" en el menu Inicio, clic derecho > **"Ejecutar como
    administrador"**.
-2. Lista los adaptadores de los routers conectados:
+2. Lista el adaptador del router conectado:
    ```powershell
    Get-NetAdapter | Where-Object { $_.InterfaceDescription -match "RNDIS" } | Select-Object Name
    ```
-3. Para **cada** adaptador que aparezca en la lista (uno por router
-   conectado), ejecuta (cambiando `"Ethernet X"` por el nombre real):
+3. Con el nombre que te devuelva (cambia `"Ethernet X"` por el real):
    ```powershell
    Set-NetIPInterface -InterfaceAlias "Ethernet X" -InterfaceMetric 6000
    ```
-4. Verifica que sigues teniendo internet/intranet normal, y que llegas a
-   cada router por su IP:
+4. Verifica que sigues teniendo internet/intranet normal, y que llegas al
+   router por su IP:
    ```powershell
    curl http://192.168.28.2/
-   curl http://192.168.28.3/
    ```
 
-## Paso 7 - Abrir el firewall (requiere Administrador)
+## Paso 6 - Abrir el firewall (requiere Administrador)
 
-Un solo proceso de la API atiende a todos los routers en un solo puerto, asi
-que solo hace falta **una** regla de firewall (en la misma PowerShell de
-administrador del paso anterior):
+En la misma PowerShell de administrador del paso anterior:
 
 ```powershell
 netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow protocol=TCP localport=8000
 ```
 
-## Paso 8 - Configurar `.env`
+## Paso 7 - Configurar `.env`
 
 De vuelta en Git Bash, en la carpeta del proyecto (`C:\SMSGateway`), copia
 la plantilla:
@@ -242,7 +235,7 @@ DASHBOARD_PASSWORD=elige-una-password
 > routers en si (ip, password, numero) **no se configuran aca**: se agregan
 > desde el dashboard en el siguiente paso.
 
-## Paso 9 - Arrancar la API
+## Paso 8 - Arrancar la API
 
 Desde Git Bash, dentro de `C:\SMSGateway`:
 
@@ -253,17 +246,17 @@ python -m uvicorn api:app --host 0.0.0.0 --port 8000
 Debe quedar la ventana abierta mostrando `Uvicorn running on
 http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
 
-## Paso 10 - Agregar tus routers desde el dashboard y probar
+## Paso 9 - Agregar el router desde el dashboard y probar
 
 1. Abre un navegador en esta misma PC y entra a `http://localhost:8000/`.
 2. Ingresa con el `DASHBOARD_USER` / `DASHBOARD_PASSWORD` que pusiste en
    `.env`.
 3. En la seccion "Routers", dale a "Agregar router" (abre un formulario en
-   una ventana modal) por cada router: id, ip — la que le asignaste en el
-   Paso 4 —, password, y opcionalmente el numero de la linea. Al guardar
-   deberia aparecer en la tabla. El lapiz de cada fila permite editarlo
-   despues (dejar la password en blanco al editar la conserva tal cual
-   esta); el tacho lo elimina, pidiendo confirmacion.
+   una ventana modal): id, ip — la que le asignaste en el Paso 4 —,
+   password, y opcionalmente el numero de la linea. Al guardar deberia
+   aparecer en la tabla. El lapiz de la fila permite editarlo despues
+   (dejar la password en blanco al editar la conserva tal cual esta); el
+   tacho lo elimina, pidiendo confirmacion.
 4. Envia un SMS de prueba. La forma mas simple es desde el propio
    dashboard: boton **"Enviar SMS"** (junto a "Agregar router") — abre un
    modal donde eliges el router, el numero de celular y el mensaje. Si
@@ -280,10 +273,9 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
    Respuesta esperada: `{"status":"sent","router":"router1","phone":"+51987654321"}`.
 5. El dashboard se actualiza solo cada 30s (indicador arriba a la derecha),
    asi que en unos segundos deberias ver el mensaje reflejado en "Resumen"
-   y en la tabla de "Mensajes" sin necesidad de recargar la pagina. Repite
-   el punto 4 para cada router que hayas configurado.
+   y en la tabla de "Mensajes" sin necesidad de recargar la pagina.
 
-## Paso 11 - Si algo falla: diagnostico
+## Paso 10 - Si algo falla: diagnostico
 
 Corre esto para ver, paso a paso, en que falla la comunicacion con un router
 en particular (cambia el numero, password e IP segun corresponda):
@@ -297,7 +289,7 @@ El mensaje de error, si lo hay, indica exactamente en que paso se rompio
 ajustar el protocolo si ese equipo tiene un firmware distinto (ver la
 seccion 3 de [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md)).
 
-## Paso 12 (opcional) - Dejarlo corriendo siempre
+## Paso 11 (opcional) - Dejarlo corriendo siempre
 
 La ventana de `uvicorn` hay que dejarla abierta manualmente, o programar que
 inicie sola con Windows (Programador de tareas) o correrla como servicio con

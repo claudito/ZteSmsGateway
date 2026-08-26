@@ -193,62 +193,30 @@ apruebe con clic. La solucion es que la persona misma abra PowerShell como
 administrador manualmente (clic derecho > "Ejecutar como administrador") y
 pegue el comando ahi.
 
-## 6. Particularidad: varios routers ZTE en la misma PC
+## 6. Particularidad: un router ZTE por PC (no 2+ por USB en la misma)
 
 Todos los MF920V (mismo modelo) salen de fabrica con la **misma IP LAN**
-(`192.168.0.1`) y la misma subred (`192.168.0.0/24`) para su interfaz USB.
-Conectar dos o mas simultaneamente sin cambiar esto genera un conflicto de
-subred duplicada: Windows no puede distinguir de forma confiable a que
-interfaz enviar el trafico dirigido a `192.168.0.1`, y el comportamiento es
-indeterminado (a veces responde el router equivocado, a veces timeout).
+(`192.168.0.1`) y, mas de fondo, **el mismo MAC address de fabrica** en su
+adaptador de red USB (confirmado con `Get-NetAdapter`: dos unidades
+distintas devolvieron el mismo MAC, `36-4B-50-B7-EF-DA`). Esto ultimo es un
+problema de capa 2 (Ethernet) que ni cambiar la IP, ni la mascara de
+subred, ni forzar un MAC distinto por software resuelve — se probo
+`Set-NetAdapterAdvancedProperty -RegistryKeyword "NetworkAddress"` y el
+driver generico de Windows para "Remote NDIS based Internet Sharing
+Device" lo ignora. Tampoco existe una salida por firmware: el MF920V no
+expone puerto COM/AT por USB (solo dos funciones compuestas, almacenamiento
+y red), asi que no hay forma de desactivar el modo CD-ROM de fabrica de
+forma permanente via comando AT.
 
-**Solucion:** antes de usarlos juntos, cambiar la IP LAN de cada router a un
-valor distinto, conectando **un router a la vez**:
+**Conclusion: con el MF920V, 2+ routers por USB a la vez en la misma PC no
+es viable.** La solucion adoptada es una PC por router — cada router se
+conecta a su propia PC (o se usan combinaciones USB + WiFi si en algun
+momento hace falta mas de un router accesible desde una sola maquina).
 
-1. Conectar solo ese router.
-2. Entrar por navegador a `http://192.168.0.1` (password de la etiqueta o
-   `admin` por defecto).
-3. Ir a la seccion de configuracion de LAN (nombre exacto varia segun idioma
-   del firmware: "Network Settings" / "LAN Settings" / "Configuracion LAN").
-4. Cambiar la "Direccion IP" del router al valor que le corresponda dentro
-   del rango asignado por el area de redes (`192.168.28.0/24`, VLAN-WIFI;
-   se evita `192.168.28.1` porque ya es el gateway de esa VLAN): router 1
-   -> `192.168.28.2`, router 2 -> `192.168.28.3`, etc. Guardar. El router se
-   reinicia.
-5. Etiquetar fisicamente el equipo con la IP asignada.
-6. Repetir con el siguiente router.
-
-Con IPs distintas, cada router aparece como una interfaz de red separada sin
-conflicto de subred, y cada uno necesita tambien el ajuste de metrica de la
-seccion 5 (uno por interfaz).
-
-**Actualizacion (sesion 2026-08-25) — esto NO alcanza para tener 2+ routers
-por USB simultaneos en la misma PC:** se investigo a fondo por que, incluso
-con IPs distintas dentro del mismo `/24`, solo un router respondia a la vez
-al conectar dos juntos. Con `Get-NetAdapter` se confirmo que **ambos
-adaptadores RNDIS reportan el mismo MAC address de fabrica**
-(`36-4B-50-B7-EF-DA` en las dos unidades probadas) — es un problema de capa
-2 (Ethernet), no de IP, asi que ni cambiar la mascara de subred ni usar IPs
-distintas lo resuelve.
-
-Se intento forzar un MAC distinto via `Set-NetAdapterAdvancedProperty
--RegistryKeyword "NetworkAddress"` (la propiedad existe, se llama
-"Direccion de red" en espanol) pero **el driver generico de Windows para
-"Remote NDIS based Internet Sharing Device" lo ignora** — el MAC se sigue
-leyendo directo del dispositivo, no hay override real.
-
-Tambien se descarto la salida de mandarle un comando AT (`AT+ZCDRUN=8`) para
-desactivar el modo CD-ROM de fabrica de forma permanente: este modelo/
-firmware **no expone ningun puerto COM/AT por USB**, solo dos funciones
-compuestas (almacenamiento + red) — se confirmo con
-`Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match "VID_19D2" }`,
-que solo devuelve `Dispositivo de almacenamiento USB` y
-`Remote NDIS based Internet Sharing Device`, nada de clase `Modem`/`Ports`.
-
-**Conclusion:** con el MF920V, 2+ routers por USB a la vez en la misma PC no
-es viable por software. Las alternativas que si funcionan (WiFi + USB
-mixto, o una VM con USB passthrough por router) estan documentadas en
-[GUIA_VM_ROUTERS_USB.md](GUIA_VM_ROUTERS_USB.md).
+Aun conectando un solo router por PC, hay que asignarle una IP fija (sale
+de fabrica en `192.168.0.1`, se cambia al rango `192.168.28.0/24` asignado
+por el area de redes) — ver Paso 4 de
+[MANUAL_INSTALACION.md](MANUAL_INSTALACION.md).
 
 ## 7. Dashboard y base de datos
 

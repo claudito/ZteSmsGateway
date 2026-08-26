@@ -243,6 +243,7 @@
 <script>
 const KEY_STORAGE = "sms_gateway_api_key";
 const THEME_STORAGE = "sms_gateway_theme";
+let loginRequired = true;
 
 function getApiKey() { return localStorage.getItem(KEY_STORAGE); }
 function setApiKey(k) { localStorage.setItem(KEY_STORAGE, k); }
@@ -276,7 +277,7 @@ function showContent() {
   document.getElementById("loginScreen").classList.add("d-none");
   document.getElementById("loginScreen").classList.remove("d-flex");
   document.getElementById("content").classList.remove("d-none");
-  document.getElementById("logoutBtn").classList.remove("d-none");
+  document.getElementById("logoutBtn").classList.toggle("d-none", !loginRequired);
   document.getElementById("autoRefreshBadge").classList.remove("d-none");
   document.getElementById("autoRefreshBadge").classList.add("d-inline-flex");
 }
@@ -610,7 +611,20 @@ document.getElementById("nextPageBtn").addEventListener("click", () => {
 });
 
 applyTheme(currentTheme());
-if (getApiKey()) refreshAll(); else showLogin();
+
+(async function start() {
+  if (getApiKey()) { refreshAll(); return; }
+  try {
+    const info = await fetch("/bootstrap").then(r => r.json());
+    loginRequired = info.login_required;
+    if (!loginRequired && info.api_key) {
+      setApiKey(info.api_key);
+      refreshAll();
+      return;
+    }
+  } catch (e) {}
+  showLogin();
+})();
 
 setInterval(() => { if (getApiKey()) refreshAll(); }, 30000);
 </script>

@@ -5,7 +5,8 @@ web para configurar routers y ver los mensajes enviados.
 
 Configuración:
     .env         -> SMS_API_KEY (secreto compartido de la API),
-                    DASHBOARD_USER / DASHBOARD_PASSWORD (login del dashboard)
+                    DASHBOARD_USER / DASHBOARD_PASSWORD (login del dashboard,
+                    opcional: si se dejan vacíos el dashboard no pide login)
     sms_gateway.db -> routers (id, ip, password, numero) y mensajes enviados,
                       administrados desde el dashboard web (GET /)
 
@@ -79,6 +80,15 @@ def health():
 @app.get("/")
 def dashboard():
     return FileResponse(BASE_DIR / "static" / "dashboard.html")
+
+
+@app.get("/bootstrap")
+def bootstrap():
+    login_required = bool(DASHBOARD_USER and DASHBOARD_PASSWORD)
+    return {
+        "login_required": login_required,
+        "api_key": None if login_required else API_KEY,
+    }
 
 
 @app.post("/login")

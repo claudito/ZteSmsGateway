@@ -167,6 +167,20 @@ cambiarla por una IP fija dentro del rango asignado:
    minutos).
 7. **Pega una etiqueta fisica en el router** con la IP que le asignaste - la
    vas a necesitar mas adelante.
+8. Como es un solo router en esta PC, puedes precargarlo para que aparezca
+   solo en el dashboard sin tener que agregarlo a mano despues. En la
+   carpeta del proyecto, copia la plantilla y edita la IP:
+   ```bash
+   cp routers.json.example routers.json
+   ```
+   Deja una sola entrada, con la IP que le asignaste:
+   ```json
+   [
+     {"id": "router1", "ip": "192.168.28.2"}
+   ]
+   ```
+   Esto solo funciona **antes** de arrancar la API por primera vez (Paso 8)
+   — es una importacion de un solo uso.
 
 > **Si esa IP choca con otro equipo de tu red** (por ejemplo, al entrar a
 > esa IP te aparece el login de otra cosa - una impresora, otro router,
@@ -223,17 +237,20 @@ Abre `.env` con el Bloc de notas (o VS Code) y completa:
 
 ```
 SMS_API_KEY=CAMBIA-ESTO-POR-UNA-CLAVE-SECRETA
-DASHBOARD_USER=elige-un-usuario
-DASHBOARD_PASSWORD=elige-una-password
+ZTE_ROUTER_PASSWORD=la-password-del-router
 ```
 
 > `SMS_API_KEY` es la clave que usan las aplicaciones que llaman a la API
-> directamente (el header `X-API-Key`). `DASHBOARD_USER` /
-> `DASHBOARD_PASSWORD` son las credenciales para entrar al dashboard web
-> con usuario y password — al iniciar sesion ahi, el dashboard obtiene la
-> `SMS_API_KEY` solo internamente, no hace falta que la tipees a mano. Los
-> routers en si (ip, password, numero) **no se configuran aca**: se agregan
-> desde el dashboard en el siguiente paso.
+> directamente (el header `X-API-Key`) — el dashboard tambien la usa por
+> detras. `ZTE_ROUTER_PASSWORD` es la password del router (la de la
+> etiqueta del equipo, o `admin` por defecto) — la usa la importacion de
+> `routers.json` del Paso 4.8 para poder loguearse a ese router.
+>
+> Como es una sola PC con un solo router de uso interno, **deja
+> `DASHBOARD_USER` y `DASHBOARD_PASSWORD` vacios o bórralos** de `.env` (o
+> de la plantilla, si no los copiaste) — asi el dashboard no pide login al
+> abrirlo. Si mas adelante quieres que si pida usuario/password, solo
+> agrega esas dos lineas con los valores que quieras.
 
 ## Paso 8 - Arrancar la API
 
@@ -246,18 +263,18 @@ python -m uvicorn api:app --host 0.0.0.0 --port 8000
 Debe quedar la ventana abierta mostrando `Uvicorn running on
 http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
 
-## Paso 9 - Agregar el router desde el dashboard y probar
+## Paso 9 - Verificar el router en el dashboard y probar
 
 1. Abre un navegador en esta misma PC y entra a `http://localhost:8000/`.
-2. Ingresa con el `DASHBOARD_USER` / `DASHBOARD_PASSWORD` que pusiste en
-   `.env`.
-3. En la seccion "Routers", dale a "Agregar router" (abre un formulario en
-   una ventana modal): id, ip — la que le asignaste en el Paso 4 —,
-   password, y opcionalmente el numero de la linea. Al guardar deberia
-   aparecer en la tabla. El lapiz de la fila permite editarlo despues
+   Si dejaste `DASHBOARD_USER`/`DASHBOARD_PASSWORD` vacios en el Paso 7,
+   entra directo sin pedir login.
+2. En la seccion "Routers" deberia aparecer ya el router (viene de la
+   importacion de `routers.json` del Paso 4.8). Si no aparece, dale a
+   "Agregar router" y complétalo a mano: id, ip, password, y opcionalmente
+   el numero de la linea. El lapiz de la fila permite editarlo despues
    (dejar la password en blanco al editar la conserva tal cual esta); el
    tacho lo elimina, pidiendo confirmacion.
-4. Envia un SMS de prueba. La forma mas simple es desde el propio
+3. Envia un SMS de prueba. La forma mas simple es desde el propio
    dashboard: boton **"Enviar SMS"** (junto a "Agregar router") — abre un
    modal donde eliges el router, el numero de celular y el mensaje. Si
    falla, el modal muestra el error tal cual lo devuelve el router (por
@@ -271,7 +288,7 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
      -d '{"phone": "+51987654321", "message": "Prueba"}'
    ```
    Respuesta esperada: `{"status":"sent","router":"router1","phone":"+51987654321"}`.
-5. El dashboard se actualiza solo cada 30s (indicador arriba a la derecha),
+4. El dashboard se actualiza solo cada 30s (indicador arriba a la derecha),
    asi que en unos segundos deberias ver el mensaje reflejado en "Resumen"
    y en la tabla de "Mensajes" sin necesidad de recargar la pagina.
 

@@ -117,78 +117,38 @@ para que tome el cambio.
 > de un router, repite esta guia completa en otra PC, una maquina por
 > router — no lo intentes en la misma.
 
-## Paso 4 - Asignar la IP fija al router
+## Paso 4 - Dejar la IP de fabrica y precargar el router
 
-Todos los MF920V traen de fabrica la misma IP (`192.168.0.1`). Vamos a
-cambiarla por una IP fija dentro del rango asignado:
+Como es un solo router por PC, **no hace falta cambiarle la IP** — se
+queda con la de fabrica, `192.168.0.1`.
 
-> **Rango de IPs a usar:** el area de redes de DIRIS Lima Este asigno el
-> rango `192.168.28.0/24` (VLAN-WIFI) para numerar estos routers. No uses
-> `192.168.28.1` porque esa IP ya esta tomada como gateway de esa VLAN en la
-> red real - usa `192.168.28.2` para el router de esta PC (si en otra PC ya
-> usaste esa IP, usa la siguiente libre: `192.168.28.3`, `192.168.28.4`,
-> etc. — cada PC es independiente, no hace falta que coincidan). Este rango
-> no coincide con las subredes domesticas/de oficina mas comunes
-> (`192.168.0.x`, `192.168.1.x`, `192.168.2.x`), asi que no deberia chocar
-> con la red normal de la PC - igual puedes confirmarlo con `ipconfig` en
-> Git Bash o PowerShell.
+> **Excepcion:** si la red normal de esta PC (WiFi/cable de la oficina)
+> tambien usa el rango `192.168.0.x`, vas a tener el mismo choque que si
+> hubiera 2 routers juntos — la PC no va a saber si `192.168.0.1` es el
+> router o algo de la red de oficina. Confirma con `ipconfig` en Git Bash
+> o PowerShell. Si tu red normal ya usa ese rango, cambia la IP del router
+> a algo distinto (ej. `192.168.28.2`, dentro del rango que te haya dado
+> el area de redes) desde su panel web (`http://192.168.0.1` → seccion de
+> LAN → **Direccion IP**), y usa esa IP en vez de `192.168.0.1` en el paso
+> de abajo.
 
-1. Abre el navegador y entra a `http://192.168.0.1`.
-2. Inicia sesion (usuario `admin`, password de la etiqueta del equipo o
-   `admin` por defecto).
-3. Dentro de esa misma pagina web del router (no es configuracion de
-   Windows/la PC), busca la seccion de configuracion de LAN del router
-   (el menu exacto varia segun el modelo/idioma del equipo: algo como
-   "Configuracion de red" > "LAN", "Network Settings" > "LAN Settings", o
-   "Configuraciones avanzadas" > "Ajustes del Router", con el campo
-   **Direccion IP**).
-4. Si el campo aparece bloqueado con un aviso tipo "Las configuraciones
-   solo pueden ser cambiadas cuando el modem esta desconectado", vuelve a
-   la pantalla principal (flecha `<` junto al titulo, o el logo arriba a
-   la izquierda) y en el bloque **"Mi equipo"** apaga el switch
-   **"Datos"** (ON -> OFF). Eso corta solo la conexion de datos movil.
-   Vuelve luego a "Ajustes del Router" y el campo ya deberia estar
-   editable.
-   > **Cuidado:** el enlace **"Apagar"** (arriba a la derecha, junto a
-   > "Modificar contrasena") es distinto del switch "Datos": ese apaga el
-   > equipo por completo. Si lo tocas por error, el router se apaga: para
-   > volver a encenderlo, desconecta el cable USB y vuelve a conectarlo -
-   > va a reaparecer como unidad `ZTEMODEM`, asi que hay que repetir el
-   > Paso 3 (`ResetCDROM.exe`) para volver a acceder a el.
-5. Cambia el campo de **Direccion IP** de `192.168.0.1` a la IP que le toca
-   dentro del rango asignado (`192.168.28.0/24`, ver nota de arriba, ej.
-   `192.168.28.2`). Actualiza tambien el **Pool IP para el servidor DHCP**
-   para que caiga dentro de esa misma subred (por ejemplo, si la IP es
-   `192.168.28.2`, el pool debe ir de `192.168.28.100` a `192.168.28.200`)
-   - si lo dejas con el rango viejo (`192.168.0.x`), el DHCP queda
-   apuntando a una subred que ya no existe. Deja igual la **Mascara de
-   Subred** (`255.255.255.0`) y el resto de campos (MTU, MSS, etc).
-6. Guarda los cambios (boton "Aplicar"). El router se reinicia (1-2
-   minutos).
-7. **Pega una etiqueta fisica en el router** con la IP que le asignaste - la
-   vas a necesitar mas adelante.
-8. Como es un solo router en esta PC, puedes precargarlo para que aparezca
-   solo en el dashboard sin tener que agregarlo a mano despues. En la
-   carpeta del proyecto, copia la plantilla y edita la IP:
-   ```bash
-   cp routers.json.example routers.json
-   ```
-   Deja una sola entrada, con la IP que le asignaste:
-   ```json
-   [
-     {"id": "router1", "ip": "192.168.28.2"}
-   ]
-   ```
-   Esto solo funciona **antes** de arrancar la API por primera vez (Paso 8)
-   — es una importacion de un solo uso.
+Precarga el router para que aparezca solo en el dashboard sin tener que
+agregarlo a mano despues. En la carpeta del proyecto, copia la plantilla:
 
-> **Si esa IP choca con otro equipo de tu red** (por ejemplo, al entrar a
-> esa IP te aparece el login de otra cosa - una impresora, otro router,
-> etc. - en vez del router ZTE): desconecta temporalmente el Wifi/cable de
-> red de la PC dejando solo el router conectado por USB, entra de nuevo a
-> esa misma IP (ahora si deberia ser el router, sin competencia de la otra
-> red), y repite el punto 5 con una IP que no choque. Reconecta el
-> Wifi/cable de red al terminar.
+```bash
+cp routers.json.example routers.json
+```
+
+Y deja una sola entrada:
+
+```json
+[
+  {"id": "router1", "ip": "192.168.0.1"}
+]
+```
+
+Esto solo funciona **antes** de arrancar la API por primera vez (Paso 8) —
+es una importacion de un solo uso.
 
 ## Paso 5 - Arreglar el conflicto de ruta de red (requiere Administrador + PowerShell)
 
@@ -213,7 +173,7 @@ Windows pide confirmar con un clic:
 4. Verifica que sigues teniendo internet/intranet normal, y que llegas al
    router por su IP:
    ```powershell
-   curl http://192.168.28.2/
+   curl http://192.168.0.1/
    ```
 
 ## Paso 6 - Abrir el firewall (requiere Administrador)
@@ -244,7 +204,7 @@ ZTE_ROUTER_PASSWORD=la-password-del-router
 > directamente (el header `X-API-Key`) — el dashboard tambien la usa por
 > detras. `ZTE_ROUTER_PASSWORD` es la password del router (la de la
 > etiqueta del equipo, o `admin` por defecto) — la usa la importacion de
-> `routers.json` del Paso 4.8 para poder loguearse a ese router.
+> `routers.json` del Paso 4 para poder loguearse a ese router.
 >
 > Como es una sola PC con un solo router de uso interno, **deja
 > `DASHBOARD_USER` y `DASHBOARD_PASSWORD` vacios o bórralos** de `.env` (o
@@ -269,7 +229,7 @@ http://0.0.0.0:8000` (no la cierres mientras quieras usar la API).
    Si dejaste `DASHBOARD_USER`/`DASHBOARD_PASSWORD` vacios en el Paso 7,
    entra directo sin pedir login.
 2. En la seccion "Routers" deberia aparecer ya el router (viene de la
-   importacion de `routers.json` del Paso 4.8). Si no aparece, dale a
+   importacion de `routers.json` del Paso 4). Si no aparece, dale a
    "Agregar router" y complétalo a mano: id, ip, password, y opcionalmente
    el numero de la linea. El lapiz de la fila permite editarlo despues
    (dejar la password en blanco al editar la conserva tal cual esta); el
@@ -298,7 +258,7 @@ Corre esto para ver, paso a paso, en que falla la comunicacion con un router
 en particular (cambia el numero, password e IP segun corresponda):
 
 ```bash
-python diagnostico.py +51987654321 admin 192.168.28.2
+python diagnostico.py +51987654321 admin 192.168.0.1
 ```
 
 El mensaje de error, si lo hay, indica exactamente en que paso se rompio

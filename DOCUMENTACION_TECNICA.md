@@ -213,9 +213,10 @@ es viable.** La solucion adoptada es una PC por router — cada router se
 conecta a su propia PC (o se usan combinaciones USB + WiFi si en algun
 momento hace falta mas de un router accesible desde una sola maquina).
 
-Aun conectando un solo router por PC, hay que asignarle una IP fija (sale
-de fabrica en `192.168.0.1`, se cambia al rango `192.168.28.0/24` asignado
-por el area de redes) — ver Paso 4 de
+Con un solo router por PC, ya no hace falta cambiarle la IP de fabrica
+(`192.168.0.1`) — solo hay que hacerlo si la red normal de esa PC tambien
+usa ese mismo rango, en cuyo caso se cambia a algo del rango
+`192.168.28.0/24` asignado por el area de redes. Ver Paso 4 de
 [MANUAL_INSTALACION.md](MANUAL_INSTALACION.md).
 
 ## 7. Dashboard y base de datos

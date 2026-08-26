@@ -76,8 +76,14 @@ para que tome el cambio.
    abre Git Bash normal y usa `cd /c/SMSGateway`).
 3. Instala las dependencias (no hace falta entorno virtual):
    ```bash
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ```
+   Se usa `python -m pip` en vez de `pip` a secas porque en algunas
+   instalaciones de Windows el comando `pip` no queda en el PATH aunque
+   `python` si funcione — `python -m pip` evita ese problema. Si tampoco
+   reconoce `python` (a pesar de haberlo verificado en el Paso 1), prueba
+   con `py -m pip install -r requirements.txt` (el launcher `py` es otra
+   forma en que Windows a veces registra Python en vez de `python` directo).
 
 ## Paso 3 - Conectar el primer router ZTE
 

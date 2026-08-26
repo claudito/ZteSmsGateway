@@ -306,9 +306,41 @@ El mensaje de error, si lo hay, indica exactamente en que paso se rompio
 ajustar el protocolo si ese equipo tiene un firmware distinto (ver la
 seccion 3 de [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md)).
 
-## Paso 11 (opcional) - Dejarlo corriendo siempre
+## Paso 11 (opcional) - Que arranque solo al iniciar Windows
 
-La ventana de `uvicorn` hay que dejarla abierta manualmente, o programar que
-inicie sola con Windows (Programador de tareas) o correrla como servicio con
-una herramienta como `nssm`. Si lo necesitas, es un paso aparte - pide que
-te lo documenten cuando llegues a esa etapa.
+Para no tener que abrir Git Bash y correr `uvicorn` a mano cada vez que se
+reinicia la PC, usa el Programador de tareas de Windows:
+
+1. Crea un archivo `iniciar_api.bat` dentro de `C:\SMSGateway` (con el Bloc
+   de notas, guardarlo como "Todos los archivos" para que no le agregue
+   `.txt`) con este contenido:
+   ```bat
+   @echo off
+   cd /d C:\SMSGateway
+   python -m uvicorn api:app --host 0.0.0.0 --port 8000 >> log.txt 2>&1
+   ```
+   (esto ademas guarda lo que muestra la API en `log.txt`, util si algo
+   falla y no hay nadie mirando la ventana).
+2. Abre PowerShell como **Administrador** y corre (crea la tarea que arranca
+   la API apenas alguien inicia sesion en Windows):
+   ```powershell
+   schtasks /create /tn "SMS Gateway API" /tr "C:\SMSGateway\iniciar_api.bat" /sc onlogon /rl highest
+   ```
+3. Para que la PC quede lista sin depender de que alguien la desbloquee,
+   configura **inicio de sesion automatico** de esa cuenta de Windows (o
+   deja la sesion siempre iniciada y solo bloqueada, nunca cerrada).
+4. Prueba que funciona: reinicia la PC, espera a que cargue el escritorio,
+   y entra a `http://localhost:8000/` desde el navegador - deberia
+   responder sin que hayas abierto nada a mano.
+
+Para desactivar la tarea mas adelante (si necesitas volver a correrla a
+mano para depurar algo):
+```powershell
+schtasks /delete /tn "SMS Gateway API" /f
+```
+
+> Si mas adelante necesitas algo mas robusto (que reinicie sola la API si
+> se cae, sin depender de que haya una sesion de Windows abierta), la
+> alternativa es correrla como servicio de Windows con una herramienta
+> como `nssm` - es un paso aparte, pide que te lo documenten si llegas a
+> necesitarlo.

@@ -6,7 +6,7 @@ Ya existen en la raíz del proyecto (`D:\Proyectos\Python\ZteSmsGateway`):
 ```bat
 @echo off
 cd /d D:\Proyectos\Python\ZteSmsGateway
-python -m uvicorn api:app --host 0.0.0.0 --port 8000 >> log.txt 2>&1
+python -m uvicorn api:app --host 0.0.0.0 --port 8888 >> log.txt 2>&1
 ```
 
 `iniciar_api_oculto.vbs` (lanza el `.bat` sin mostrar ventana de consola):
@@ -45,14 +45,14 @@ sobrescribe la tarea existente).
 
 ## Probar
 
-Antes de probar, cerrar cualquier `uvicorn` corriendo a mano en el puerto 8000
+Antes de probar, cerrar cualquier `uvicorn` corriendo a mano en el puerto 8888
 (si no, la tarea fallará por puerto ocupado):
 
 ```powershell
 schtasks /run /tn "SMS Gateway API"
 ```
 
-Luego entrar a `http://localhost:8000/` — debería responder. También se puede
+Luego entrar a `http://localhost:8888/` — debería responder. También se puede
 reiniciar la PC y verificar que arranca solo al llegar al escritorio.
 
 ## Ver logs / errores
@@ -69,10 +69,10 @@ schtasks /end /tn "SMS Gateway API"
 ```
 
 Si eso no la corta (por ejemplo porque la iniciaste a mano, no por la tarea),
-mata el proceso que tiene el puerto 8000 abierto:
+mata el proceso que tiene el puerto 8888 abierto:
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+Get-NetTCPConnection -LocalPort 8888 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
 ## Desactivar / quitar la tarea

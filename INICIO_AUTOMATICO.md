@@ -39,11 +39,30 @@ reiniciar la PC y verificar que arranca solo al llegar al escritorio.
 
 La salida (incluidos errores) queda en `log.txt`, en la raíz del proyecto.
 
+## Detener el proceso que quedó corriendo
+
+Si la tarea ya arrancó la API y quieres pararla (sin desactivar la tarea, o
+sea que puede volver a arrancar en el próximo logon):
+
+```powershell
+schtasks /end /tn "SMS Gateway API"
+```
+
+Si eso no la corta (por ejemplo porque la iniciaste a mano, no por la tarea),
+mata el proceso que tiene el puerto 8000 abierto:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
 ## Desactivar / quitar la tarea
 
 ```powershell
 schtasks /delete /tn "SMS Gateway API" /f
 ```
+
+Esto solo quita el registro en el Programador de tareas — no mata un proceso
+que ya esté corriendo (usar la sección anterior para eso).
 
 ## Alternativa más robusta (opcional)
 

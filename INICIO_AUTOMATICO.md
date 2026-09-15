@@ -75,6 +75,23 @@ mata el proceso que tiene el puerto 8888 abierto:
 Get-NetTCPConnection -LocalPort 8888 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
 ```
 
+## Si cambias el puerto (u otra cosa del `.bat`)
+
+Editar `iniciar_api.bat` no afecta al proceso que ya está corriendo — sigue
+escuchando en el puerto viejo hasta que lo mates. `schtasks /delete` tampoco
+lo mata, solo borra el registro de la tarea. Pasos:
+
+1. Editar `iniciar_api.bat` con el cambio.
+2. Matar el proceso viejo (ajustar el puerto al que tenía antes):
+   ```powershell
+   Get-NetTCPConnection -LocalPort 8000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+   ```
+3. Recrear la tarea y correrla (usa el `.bat` actualizado):
+   ```powershell
+   schtasks /create /tn "SMS Gateway API" /tr "D:\Proyectos\Python\ZteSmsGateway\iniciar_api_oculto.vbs" /sc onlogon /rl highest /f
+   schtasks /run /tn "SMS Gateway API"
+   ```
+
 ## Desactivar / quitar la tarea
 
 ```powershell

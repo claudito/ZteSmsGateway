@@ -1,23 +1,39 @@
 # Arranque automático al iniciar Windows
 
-Ya existe `iniciar_api.bat` en la raíz del proyecto (`D:\Proyectos\Python\ZteSmsGateway`):
+Ya existen en la raíz del proyecto (`D:\Proyectos\Python\ZteSmsGateway`):
 
+`iniciar_api.bat`:
 ```bat
 @echo off
 cd /d D:\Proyectos\Python\ZteSmsGateway
 python -m uvicorn api:app --host 0.0.0.0 --port 8000 >> log.txt 2>&1
 ```
 
+`iniciar_api_oculto.vbs` (lanza el `.bat` sin mostrar ventana de consola):
+```vbscript
+CreateObject("WScript.Shell").Run """D:\Proyectos\Python\ZteSmsGateway\iniciar_api.bat""", 0, False
+```
+
+> El `.vbs` es necesario porque `schtasks /sc onlogon` sin credenciales
+> guardadas corre en modo interactivo: si apuntas la tarea directo al `.bat`,
+> se abre una ventana de `cmd` visible y **cerrarla mata el proceso**. Apuntando
+> al `.vbs`, `wscript` lanza el `.bat` con ventana oculta (estilo `0`), así que
+> no hay ventana que alguien pueda cerrar por accidente.
+
 ## Registrar la tarea
 
 Abrir **PowerShell como Administrador** y ejecutar:
 
 ```powershell
-schtasks /create /tn "SMS Gateway API" /tr "D:\Proyectos\Python\ZteSmsGateway\iniciar_api.bat" /sc onlogon /rl highest /f
+schtasks /create /tn "SMS Gateway API" /tr "wscript.exe \"D:\Proyectos\Python\ZteSmsGateway\iniciar_api_oculto.vbs\"" /sc onlogon /rl highest /f
 ```
 
-Esto crea una tarea que arranca `iniciar_api.bat` apenas esa cuenta de Windows
+Esto crea una tarea que arranca la API (oculta) apenas esa cuenta de Windows
 inicia sesión.
+
+Si ya habías creado la tarea apuntando directo al `.bat`, hay que borrarla y
+recrearla con el comando de arriba (o correr ese mismo comando con `/f`, que
+sobrescribe la tarea existente).
 
 > Para que quede listo sin depender de que alguien desbloquee la PC, configurar
 > **inicio de sesión automático** de esa cuenta (o dejar la sesión siempre

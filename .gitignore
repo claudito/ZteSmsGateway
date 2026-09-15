@@ -13,3 +13,4 @@ venv/
 
 # Restos de pruebas
 .api_key.txt
+log.txt

@@ -25,8 +25,12 @@ CreateObject("WScript.Shell").Run """D:\Proyectos\Python\ZteSmsGateway\iniciar_a
 Abrir **PowerShell como Administrador** y ejecutar:
 
 ```powershell
-schtasks /create /tn "SMS Gateway API" /tr "wscript.exe \"D:\Proyectos\Python\ZteSmsGateway\iniciar_api_oculto.vbs\"" /sc onlogon /rl highest /f
+schtasks /create /tn "SMS Gateway API" /tr "D:\Proyectos\Python\ZteSmsGateway\iniciar_api_oculto.vbs" /sc onlogon /rl highest /f
 ```
+
+(apuntar directo al `.vbs` alcanza — Windows lo asocia con `wscript.exe` solo.
+No metas `wscript.exe "..."` a mano en PowerShell: las comillas anidadas con
+`\"` no se escapan igual que en cmd y `schtasks` recibe el argumento roto.)
 
 Esto crea una tarea que arranca la API (oculta) apenas esa cuenta de Windows
 inicia sesión.

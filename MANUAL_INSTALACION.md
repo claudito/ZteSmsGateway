@@ -196,7 +196,7 @@ Windows pide confirmar con un clic:
 En la misma PowerShell de administrador del paso anterior:
 
 ```powershell
-netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow protocol=TCP localport=8000
+netsh advfirewall firewall add rule name="SMS Gateway API" dir=in action=allow protocol=TCP localport=8888
 ```
 
 ## Paso 7 - Configurar `.env`
